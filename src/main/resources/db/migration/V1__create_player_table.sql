@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    role VARCHAR(50) NOT NULL DEFAULT 'USER'
+);
+
+
+CREATE TABLE IF NOT EXISTS games (
+    id SERIAL PRIMARY KEY,
+    player1_id INT NOT NULL,
+    player2_id INT NOT NULL,
+    player_score1 INT NOT NULL,
+    player_score2 INT NOT NULL,
+    game_status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
+    game_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_game_player1 FOREIGN KEY (player1_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_game_player2 FOREIGN KEY (player2_id) REFERENCES users(id) ON DELETE CASCADE
+);

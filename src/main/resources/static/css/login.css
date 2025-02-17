@@ -1,0 +1,84 @@
+body{
+font-family:Arial, sans-serif;
+background-color:#f4f4f4;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+margin: 0;
+}
+
+.login-container{
+background-color:#fff;
+padding: 20px;
+border-radius:10px;
+box-shadow: 0 0 10px rgba(0,0,0,0.1);
+text-align: center;
+width: 300px;
+}
+h1{
+margin-bottom:20px;
+color: #333;
+}
+
+label{
+display:block;
+margin-top :10px
+text-align: left;
+font-weight:bold;
+}
+input{
+width:100px;
+padding:8px;
+margin-top: 5px;
+border: 1px solid #ccc;
+border-radius: 5px;
+}
+button{
+width: 100%;
+padding: 10px;
+margin-top: 20px;
+background-color: #007bff;
+border: none;
+color: white;
+font-size: 16px;
+cursor: pointer;
+border-radius: 5px;
+}
+button{
+background-color: #0056b3;
+}
+.form-group{
+margin-bottom:15px
+}
+body {
+    background: url('/images/tennis-background.jpg') no-repeat center center fixed;
+    background-size: cover;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.login-container {
+    background: rgba(255, 255, 255, 0.8); /* Прозрачный белый фон */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+button {
+    background-color: #4CAF50; /* Зеленый цвет в стиле теннисного корта */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}

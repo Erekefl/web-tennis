@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Приглашения</title>
+</head>
+<body>
+<h1>Ваши приглашения</h1>
+<ul>
+    <li th:each="invite : ${invites}">
+        <span th:text="${invite.player1.username}"></span> приглашает вас на игру.
+        <form action="/games/invites/accept" method="post">
+            <input type="hidden" name="gameId" th:value="${invite.id}">
+            <button type="submit">Принять</button>
+        </form>
+    </li>
+</ul>
+<a href="/games">Перейти к играм</a>
+</body>
+</html>

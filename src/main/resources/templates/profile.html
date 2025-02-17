@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Профиль</title>
+  <link rel="stylesheet" href="/css/profile.css">
+</head>
+<body>
+
+<div class="profile-container">
+  <h2>Профиль</h2>
+  <p>Имя пользователя: <span th:text="${user.username}"></span></p>
+  <a href="/games/all" class="btn">Добавить игру</a>
+</div>
+
+</body>
+</html>
+

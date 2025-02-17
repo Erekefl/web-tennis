@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Приглашение на игру</title>
+    <link rel="stylesheet" href="/css/addGame.css">
+</head>
+<script src="/js/addGame.js"></script>
+<body>
+
+<div class="container">
+    <h1>Пригласить на игру</h1>
+
+    <form action="/games/invite" method="post">
+        <div class="form-group">
+            <label for="player1">Игрок 1 (Вы):</label>
+            <input type="text" id="player1" name="player1Name" th:value="${#authentication.principal.username}" readonly>
+        </div>
+
+        <div class="form-group">
+            <label for="player2">Игрок 2 (Соперник):</label>
+            <input list="playersList" name="player2Name" id="player2" placeholder="Выберите или введите имя" required>
+            <datalist id="playersList">
+                <option th:each="player:${players}" th:value="${player.username}" th:text="${player.username}"></option>
+            </datalist>
+            <span id="player2Error" class="error-message hidden">Такого игрока не существует</span>
+        </div>
+
+        <button type="submit" class="btn">Пригласить</button>
+    </form>
+
+    <a href="/profile" class="back-link">Назад в профиль</a>
+</div>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--<!DOCTYPE html>-->
+<!--<html lang="ru" xmlns:th="http://www.w3.org/1999/xhtml">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>Добавить игру</title>-->
+<!--    <link rel="stylesheet" href="/css/addGame.css">-->
+<!--</head>-->
+<!--<script src="/js/addGame.js"></script>-->
+<!--<body>-->
+
+<!--<div class="container">-->
+<!--    <h1>Добавить игру</h1>-->
+
+<!--    <form action="/games/add-game" method="post">-->
+<!--        <div class="form-group">-->
+<!--            <label for="player1">Игрок 1 (Вы):</label>-->
+<!--            <input type="text" id="player1" name="player1Name" th:value="${#authentication.principal.username}" readonly>-->
+<!--        </div>-->
+
+<!--        <div class="form-group">-->
+<!--            <label for="player2">Игрок 2 (Соперник):</label>-->
+<!--            <input list="playersList" name="player2Name" id="player2" placeholder="Выберите или введите имя" required>-->
+<!--            <datalist id="playersList">-->
+<!--                <option th:each="player:${players}" th:value="${player.username}" th:text="${player.username}"></option>-->
+<!--            </datalist>-->
+<!--            <span id="player2Error" class="error-message hidden">Такого игрока не существует</span>-->
+<!--        </div>-->
+
+<!--        <div class="form-group score-group">-->
+<!--            <input type="number" id="playerScore1" name="playerScore1" required>-->
+<!--            <span>:</span>-->
+<!--            <input type="number" id="playerScore2" name="playerScore2" required>-->
+<!--        </div>-->
+
+<!--        <button type="submit" class="btn">Добавить игру</button>-->
+<!--    </form>-->
+
+<!--    <a href="/games/all" class="back-link">Назад к списку игр</a>-->
+<!--</div>-->
+
+<!--</body>-->
+<!--</html>-->

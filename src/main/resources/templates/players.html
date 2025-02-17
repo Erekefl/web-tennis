@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Выбор противника</title>
+</head>
+<body>
+<h2>Выберите игрока для игры</h2>
+<ul>
+    <!-- Проходим по списку игроков и выводим их -->
+    <li th:each="player : ${players}">
+    <li th:each="player : ${players}" th:text="${player.username}"></li>
+<!--        <a th:href="@{/invite/{username}(username=${player.username})}" th:text="${player.username}"></a>-->
+    </li>
+</ul>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--<!DOCTYPE html>-->
+<!--<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>Players List</title>-->
+<!--</head>-->
+<!--<body>-->
+<!--<h1>Players List</h1>-->
+<!--<a href="/players/add">Add Player</a>-->
+<!--<ul>-->
+<!--    <li th:each="player : ${players}">-->
+<!--        <span th:text="${player.name}"></span>-->
+<!--        <a th:href="@{/players/edit/{id}(id=${player.id})}">Edit</a> |-->
+<!--        <a th:href="@{/players/delete/{id}(id=${player.id})}" onclick="return confirm('Are you sure?')">Delete</a>-->
+<!--    </li>-->
+<!--</ul>-->
+<!--</body>-->
+<!--</html>-->

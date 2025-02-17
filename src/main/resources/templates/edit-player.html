@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Редактирование игрока</title>
+</head>
+<body>
+<h1>Редактирование игрока</h1>
+
+<form th:action="@{/users/edit/{id}(id=${user.id})}" th:object="${user}" method="post">
+    <input type="hidden" th:field="*{id}"/>
+
+    <label for="username">Имя игрока:</label>
+    <input type="text" id="username" th:field="*{username}" required/>
+    <br>
+
+    <label for="password">Новый пароль (если не менять - оставьте пустым):</label>
+    <input type="password" id="password" name="password"/>
+    <br>
+
+    <label for="role">Роль:</label>
+    <select id="role" th:field="*{role}">
+        <option value="USER">Пользователь</option>
+        <option value="ADMIN">Администратор</option>
+        <option value="SUPER_ADMIN">Суперадмин</option>
+    </select>
+    <br>
+
+    <button type="submit">Сохранить изменения</button>
+</form>
+
+<br>
+<a href="/users">Назад к списку игроков</a>
+</body>
+</html>

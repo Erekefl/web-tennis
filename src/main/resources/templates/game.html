@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Games</title>
+</head>
+<body>
+<h1>Game List</h1>
+
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>PLAYER 1</th>
+        <th>SCORE</th>
+        <th>PLAYER 2</th>
+        <th>SCORE</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="game : ${games}">
+        <td th:text = "${game.id}">1</td>
+        <td th:text = "${game.player1.username}">Player 1</td>
+        <td th:text = "${game.playerScore1}">0</td>
+        <td th:text = "${game.player2.username}">2</td>
+        <td th:text = "${game.playerScore2}">0</td>
+    </tr>
+    </tbody>
+</table>
+
+
+<form action="/games/add-game" method="get">
+    <button type="submit" class="add-game-btn">Добавить игру</button>
+</form>
+
+</body>
+</html>

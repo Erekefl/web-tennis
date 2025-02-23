@@ -1,56 +1,130 @@
 <!DOCTYPE html>
-<html lang="ru" xmlns:th="http://www.w3.org/1999/xhtml">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>Выбор противника</title>
+    <title>Список игроков</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+        $(document).ready(function() {
+            $('.invite-player-form').submit(function(e) {
+                e.preventDefault();
+                const form = $(this);
+                const button = form.find('button');
+                const opponentUsername = form.find('input[name="opponentUsername"]').val();
+                
+                button.prop('disabled', true);
+                
+                $.ajax({
+                    url: '/games/create',
+                    type: 'POST',
+                    data: { opponentUsername: opponentUsername },
+                    success: function(response) {
+                        window.location.href = '/profile';
+                    },
+                    error: function(xhr) {
+                        button.prop('disabled', false);
+                        const errorMessage = xhr.responseText || 'Произошла ошибка при отправке приглашения';
+                        alert(errorMessage);
+                    }
+                });
+            });
+        });
+    </script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+        }
+        .players-container {
+            max-width: 800px;
+            margin: 40px auto;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .list-group {
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        .list-group-item {
+            border: none;
+            padding: 1rem 1.5rem;
+            background-color: white;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .list-group-item:last-child {
+            border-bottom: none;
+        }
+        .list-group-item:hover {
+            background-color: #f8f9fa;
+            transform: translateX(5px);
+        }
+        .player-name {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        .btn {
+            padding: 0.6rem 1.2rem;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background-color: #4361ee;
+            border-color: #4361ee;
+        }
+        .btn-primary:hover {
+            background-color: #3730a3;
+            border-color: #3730a3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+        }
+        .btn-secondary {
+            background-color: #64748b;
+            border-color: #64748b;
+        }
+        .btn-secondary:hover {
+            background-color: #475569;
+            border-color: #475569;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
+        }
+        .page-title {
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+    }
+</style>
 </head>
-<body>
-<h2>Выберите игрока для игры</h2>
-<ul>
-    <!-- Проходим по списку игроков и выводим их -->
-    <li th:each="player : ${players}">
-    <li th:each="player : ${players}" th:text="${player.username}"></li>
-<!--        <a th:href="@{/invite/{username}(username=${player.username})}" th:text="${player.username}"></a>-->
-    </li>
-</ul>
+<body th:style="${themeSettings.backgroundImageUrl != null ? 'background-image: url(' + themeSettings.backgroundImageUrl + ');' : ''}"
+    <div class="players-container">
+        <h2 class="page-title text-center">Список игроков</h2>
+        <div class="card">
+            <div class="list-group">
+                <div th:each="player : ${players}" class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="player-name" th:text="${player.username}">Имя игрока</span>
+                        <form class="invite-player-form d-inline">
+                            <input type="hidden" name="opponentUsername" th:value="${player.username}">
+                            <button type="submit" class="btn btn-primary">Пригласить игрока</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="text-center">
+            <a href="/profile" class="btn btn-secondary">Вернуться в профиль</a>
+        </div>
+    </div>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!--<!DOCTYPE html>-->
-<!--<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">-->
-<!--<head>-->
-<!--    <meta charset="UTF-8">-->
-<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
-<!--    <title>Players List</title>-->
-<!--</head>-->
-<!--<body>-->
-<!--<h1>Players List</h1>-->
-<!--<a href="/players/add">Add Player</a>-->
-<!--<ul>-->
-<!--    <li th:each="player : ${players}">-->
-<!--        <span th:text="${player.name}"></span>-->
-<!--        <a th:href="@{/players/edit/{id}(id=${player.id})}">Edit</a> |-->
-<!--        <a th:href="@{/players/delete/{id}(id=${player.id})}" onclick="return confirm('Are you sure?')">Delete</a>-->
-<!--    </li>-->
-<!--</ul>-->
-<!--</body>-->
-<!--</html>-->

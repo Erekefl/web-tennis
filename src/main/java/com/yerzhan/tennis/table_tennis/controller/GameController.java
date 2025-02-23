@@ -1,155 +1,206 @@
 package com.yerzhan.tennis.table_tennis.controller;
 
 import com.yerzhan.tennis.table_tennis.entity.Games;
-import com.yerzhan.tennis.table_tennis.entity.Users;
-import com.yerzhan.tennis.table_tennis.repository.UserRepository;
-import com.yerzhan.tennis.table_tennis.service.GameService;
-import com.yerzhan.tennis.table_tennis.service.impl.UserDetailServiceImpl;
+import com.yerzhan.tennis.table_tennis.entity.GameRound;
+import com.yerzhan.tennis.table_tennis.entity.ChatMessage;
+import com.yerzhan.tennis.table_tennis.service.impl.GamesService;
+import com.yerzhan.tennis.table_tennis.service.ThemeSettingsService;
+import com.yerzhan.tennis.table_tennis.service.ChatService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
+@Slf4j
 @Controller
 @RequestMapping("/games")
-@RequiredArgsConstructor
+@RequiredArgsConstructor    
 public class GameController {
 
-    private final GameService gamesService;
-    private final UserRepository userRepository;
-    private final UserDetailServiceImpl userDetailService;
+    private final GamesService gamesService;
+    private final ThemeSettingsService themeSettingsService;
+    private final ChatService chatService;
 
-
-    @GetMapping("/add-game")
-    public String showAddGameForm(Model model, Principal principal) {
-        Users currentUser = userDetailService.findByUsername(principal.getName());
-
-        List<Users> availablePlayers = userDetailService.getAllUsersByName(currentUser.getUsername());
-        model.addAttribute("currentUser",currentUser);
-        model.addAttribute("availablePlayers",availablePlayers);
-        model.addAttribute("game", new Games());
-        return "addGame";
-    }
-
-    @PostMapping("/add-game")
-    public String createGame(@RequestParam String player2Name,
-                             Principal principal) {
-
-
-        Users currentUser = userDetailService.findByUsername(principal.getName());
-        Users opponent = userDetailService.findByUsername(player2Name);
-        if (opponent == null) {
-            throw new IllegalStateException("Один из игроков не найден");
+    @PostMapping("/create")
+    @ResponseBody
+    public ResponseEntity<?> createGame(@RequestParam String opponentUsername, Authentication authentication) {
+        try {
+            String currentUsername = authentication.getName();
+            Games game = gamesService.createGame(currentUsername, opponentUsername);
+            return ResponseEntity.ok().body(Map.of("gameId", game.getId()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-        // Создание игры
-        Games games = new Games();
-        games.setPlayer1(currentUser);
-        games.setPlayer2(opponent);
-
-        gamesService.createGame(games);
-        return "redirect:/profile";
     }
 
-    @GetMapping("/all")
-    public String getAvailablePlayers(Principal principal, Model model) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println("Current user: ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;" + auth.getName());
-
-        if (principal == null) {
-            throw new RuntimeException("Пользователь не аутентифицирован");
+    @PostMapping("/accept")
+    @ResponseBody
+    public ResponseEntity<String> acceptInvite(@RequestParam Integer gameId, Authentication authentication) {
+        String username = authentication.getName();
+        log.info("Запрос на принятие приглашения: gameId={}, username={}", gameId, username);
+        try {
+            gamesService.acceptGame(gameId, username);
+            log.info("Приглашение успешно принято: gameId={}", gameId);
+            return ResponseEntity.ok("Приглашение принято");
+        } catch (Exception e) {
+            log.error("Ошибка при принятии приглашения: gameId={}, error={}", gameId, e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-
-        String currentUsername = principal.getName();
-        List<String> players = userRepository.findAll()
-                .stream()
-                .filter(user -> !user.getUsername().equals(currentUsername))
-                .map(Users::getUsername)
-                .collect(Collectors.toList());
-
-        model.addAttribute("players", players);
-        return "players";
     }
 
-
-
-    @GetMapping("/invites")
-    public String showInvites(@AuthenticationPrincipal UserDetails userDetails,Model model){
-        Users user = userDetailService.findByUsername(userDetails.getUsername());
-        List<Games> invites = gamesService.getPendingGamesForUser(user);
-        model.addAttribute("invites",invites);
-        return "invites";
-    }
-    @PostMapping("/invites/accept")
-    public String acceptInvite(@RequestParam int gameId) {
-        gamesService.acceptInvite(gameId);
-        return "redirect:/games";
-    }
-
-//    @GetMapping
-//    public String getAvailablePlayers(@AuthenticationPrincipal Users currentUser, Model model) {
-//        List<String> players = userRepository.findAll()
-//                .stream()
-//                .filter(user -> !user.getUsername().equals(currentUser.getUsername())) // Исключаем себя
-//                .map(Users::getUsername) // Берём только имя
-//                .collect(Collectors.toList());
-//
-//        model.addAttribute("players", players); // Передаём список в шаблон
-//        return "players"; // Название HTML-шаблона (players.html)
+    @PostMapping("/reject")
+    @ResponseBody
+    public ResponseEntity<String> rejectInvite(@RequestParam Integer gameId, Authentication authentication) {
+        String username = authentication.getName();
+        log.info("Запрос на отклонение приглашения: gameId={}, username={}", gameId, username);
+        try {
+            gamesService.rejectGame(gameId, username);
+            log.info("Приглашение успешно отклонено: gameId={}", gameId);
+            return ResponseEntity.ok("Приглашение отклонено");
+        } catch (Exception e) {
+            log.error("Ошибка при отклонении приглашения: gameId={}, error={}", gameId, e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
+    @PostMapping("/cancel")
+    @ResponseBody
+    public ResponseEntity<String> cancelInvite(@RequestParam Integer gameId, Authentication authentication) {
+        String username = authentication.getName();
+        log.info("Запрос на отмену приглашения: gameId={}, username={}", gameId, username);
+        try {
+            gamesService.cancelGame(gameId, username);
+            log.info("Приглашение успешно отменено: gameId={}", gameId);
+            return ResponseEntity.ok("Приглашение отменено");
+        } catch (Exception e) {
+            log.error("Ошибка при отмене приглашения: gameId={}, error={}", gameId, e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
+    @PostMapping("/finish")
+    @ResponseBody
+    public ResponseEntity<String> finishGame(
+            @RequestParam Integer gameId,
+            @RequestParam Integer playerScore,
+            @RequestParam Integer opponentScore,
+            Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            gamesService.finishGame(gameId, username, playerScore, opponentScore);
+            return ResponseEntity.ok("Результат игры успешно сохранен");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
+    @PostMapping("/finish-and-exit")
+    @ResponseBody
+    public ResponseEntity<String> finishGameAndExit(
+            @RequestParam Integer gameId,
+            Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            gamesService.finishGameAndExit(gameId, username);
+            return ResponseEntity.ok("Игра успешно завершена");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
-//@GetMapping("/add-game")
-//public String showAddGameForm(Model model) {
-//    List<Users> players = userDetailService.getAllUsers();
-//    model.addAttribute("players",players);
-//    model.addAttribute("game",new Games());
-//    return "addGame";
-//}
+    @GetMapping("/{gameId}/messages")
+    @ResponseBody
+    public List<ChatMessage> getMessages(@PathVariable Integer gameId) {
+        return chatService.getGameMessages(gameId);
+    }
 
-//@PostMapping("/add-game")
-//public String createGame(@RequestParam String player1Name,
-//                         @RequestParam String player2Name,
-//                         @RequestParam (required = false) Integer playerScore2) {
-//
-//    Users player1 = userRepository.findByUsername(player1Name);
-//    Users player2 = userRepository.findByUsername(player2Name);
-//
-//    if (player1 == null || player2 == null) {
-//        throw new IllegalStateException("Один из игроков не найден");
-//    }
-//    // Создание игры
-//    Games games = new Games();
-//    games.setPlayer2(player2);
-//    games.setPlayerScore2(playerScore2);
-//    gamesService.createGame(games);
-//    return "redirect:/games/all";
-//}
+    @PostMapping("/{gameId}/messages")
+    @ResponseBody
+    public ResponseEntity<?> sendMessage(
+            @PathVariable Integer gameId,
+            @RequestParam String content,
+            Authentication authentication) {
+        try {
+            ChatMessage message = chatService.saveMessage(gameId, authentication.getName(), content);
+            return ResponseEntity.ok(message);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
-//@GetMapping
-//public String getGamesPage(Model model){
-//    Users users = userDetailService.getAuthenticatedUsers();
-//    List<Games>  games = userDetailService.getGamesForUsers(users);
-//    model.addAttribute("games",games);
-//    return "games";
-//}
+    @GetMapping("/{gameId}/rounds")
+    @ResponseBody
+    public List<GameRound> getRounds(@PathVariable Integer gameId) {
+        return gamesService.getGameRounds(gameId);
+    }
 
+    @GetMapping("/start/{gameId}")
+    public String startGame(@PathVariable Integer gameId, Authentication authentication, Model model) {
+        try {
+            String username = authentication.getName();
+            Games game = gamesService.startGame(gameId, username);
+            List<ChatMessage> messages = chatService.getGameMessages(gameId);
+            List<GameRound> rounds = gamesService.getGameRounds(gameId);
+            model.addAttribute("game", game);
+            model.addAttribute("messages", messages);
+            model.addAttribute("rounds", rounds);
+            model.addAttribute("currentUsername", username);
+            model.addAttribute("themeSettings", themeSettingsService.getCurrentSettings());
+            return "game";
+        } catch (Exception e) {
+            return "redirect:/profile?error=" + e.getMessage();
+        }
+    }
 
+    @GetMapping("/history/{gameId}")
+    public String showGameHistory(@PathVariable Integer gameId, Authentication authentication, Model model) {
+        try {
+            String username = authentication.getName();
+            Games game = gamesService.getGameHistory(gameId, username);
+            List<GameRound> rounds = gamesService.getGameRounds(gameId);
+            
+            model.addAttribute("game", game);
+            model.addAttribute("rounds", rounds);
+            model.addAttribute("themeSettings", themeSettingsService.getCurrentSettings());
+            return "game_history";
+        } catch (Exception e) {
+            return "redirect:/profile?error=" + e.getMessage();
+        }
+    }
 
+    @GetMapping("/history")
+    public String showAllGamesHistory(Authentication authentication, Model model) {
+        String username = authentication.getName();
+        List<Games> finishedGames = gamesService.getAllFinishedGames(username);
+        model.addAttribute("finishedGames", finishedGames);
+        model.addAttribute("currentUsername", username);
+        model.addAttribute("themeSettings", themeSettingsService.getCurrentSettings());
+        return "games_history";
+    }
 
-
-//@GetMapping("/all")
-//public String getAllGames(Model model) {
-//    List<Games> games = gamesService.getAllGames();
-//    model.addAttribute("games", games);
-//    return "game";
-//}
+    @GetMapping("/{gameId}/chat")
+    public String showChat(@PathVariable Integer gameId, Authentication authentication, Model model) {
+        try {
+            String username = authentication.getName();
+            Games game = gamesService.getGameForChat(gameId, username);
+            List<ChatMessage> messages = chatService.getGameMessages(gameId);
+            
+            // Отмечаем сообщения как прочитанные
+            chatService.markMessagesAsRead(gameId, username);
+            
+            model.addAttribute("game", game);
+            model.addAttribute("messages", messages);
+            model.addAttribute("currentUsername", username);
+            model.addAttribute("themeSettings", themeSettingsService.getCurrentSettings());
+            return "chat";
+        } catch (Exception e) {
+            return "redirect:/profile?error=" + e.getMessage();
+        }
+    }
+}

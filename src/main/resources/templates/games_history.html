@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>История игр</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+        }
+        .history-container {
+            max-width: 1000px;
+            margin: 40px auto;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .card-body {
+            padding: 2rem;
+        }
+        .game-history-item {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+            cursor: pointer;
+            border-left: 4px solid #4361ee;
+        }
+        .game-history-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .player-name {
+            font-weight: 500;
+            font-size: 1.1rem;
+            margin: 0 10px;
+        }
+        .game-date {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        .score {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2c3e50;
+            background-color: #f8f9fa;
+            padding: 5px 15px;
+            border-radius: 8px;
+            margin: 0 15px;
+        }
+        .btn-back {
+            background-color: #4361ee;
+            border-color: #4361ee;
+            padding: 0.8rem 2rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .btn-back:hover {
+            background-color: #3730a3;
+            border-color: #3730a3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+        }
+        .current-user {
+            color: #4361ee;
+        }
+        .opponent-user {
+            color: #10B981;
+        }
+        .game-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+        .players-and-score {
+            display: flex;
+            align-items: center;
+        }
+        .no-games {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body th:style="${themeSettings.backgroundImageUrl != null ? 'background-image: url(' + themeSettings.backgroundImageUrl + ');' : ''}"
+    <div class="history-container">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="text-center mb-4">История всех игр</h2>
+                
+                <div th:if="${finishedGames.empty}" class="no-games">
+                    <p>У вас пока нет завершенных игр.</p>
+                </div>
+                
+                <div th:each="game : ${finishedGames}" class="game-history-item"
+                     th:onclick="'window.location.href=\'/games/history/' + ${game.id} + '\''">
+                    <div class="game-info">
+                        <div class="players-and-score">
+                            <span class="player-name current-user" 
+                                  th:text="${game.player.username == currentUsername ? game.player.username : game.opponent.username}">
+                                Игрок 1
+                            </span>
+                            <span class="score">
+                                <span th:text="${game.player.username == currentUsername ? game.playerScore : game.opponentScore}">0</span>
+                                :
+                                <span th:text="${game.player.username == currentUsername ? game.opponentScore : game.playerScore}">0</span>
+                            </span>
+                            <span class="player-name opponent-user"
+                                  th:text="${game.player.username == currentUsername ? game.opponent.username : game.player.username}">
+                                Игрок 2
+                            </span>
+                        </div>
+                        <span class="game-date" th:text="${#temporals.format(game.gameDate, 'dd.MM.yyyy HH:mm')}">
+                            Дата игры
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <a href="/profile" class="btn btn-back">Вернуться в профиль</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

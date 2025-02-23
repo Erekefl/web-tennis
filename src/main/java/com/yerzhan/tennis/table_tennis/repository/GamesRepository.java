@@ -4,15 +4,18 @@ import com.yerzhan.tennis.table_tennis.entity.Games;
 import com.yerzhan.tennis.table_tennis.entity.Users;
 import com.yerzhan.tennis.table_tennis.utils.GameStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-@Repository
-public interface GamesRepository extends JpaRepository<Games,Integer> {
-    List<Games> findByPlayer2(Users player2);
-//    @Query("SELECT g FROM Game g WHERE g.player2.username = :username AND g.gameStatus = :gameStatus")
-//    List<Games> findByPlayer2AndGameStatus(@Param("username") Users player2, @Param("gameStatus") GameStatus gameStatus);
+import java.util.Optional;
 
+@Repository
+public interface GamesRepository extends JpaRepository<Games, Integer> {
+    List<Games> findByPlayer_Username(String username);
+    List<Games> findByOpponent_Username(String username);
+    List<Games> findByOpponent_UsernameAndGameStatus(String username, GameStatus status);
+    List<Games> findByPlayer_UsernameAndGameStatus(String username, GameStatus status);
+    Optional<Games> findByPlayerAndOpponentAndGameStatus(Users player, Users opponent, GameStatus status);
+    List<Games> findByOpponentUsernameAndGameStatusIn(String username, List<GameStatus> statuses);
+    List<Games> findByPlayerUsernameAndGameStatusIn(String username, List<GameStatus> statuses);
 }

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Ошибка</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            background-size: cover;
+            background-position: center;
+        }
+        .error-container {
+            max-width: 600px;
+            width: 100%;
+            padding: 20px;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: rgba(255, 255, 255, 0.95);
+        }
+        .card-body {
+            padding: 2rem;
+        }
+        .error-code {
+            font-size: 4rem;
+            font-weight: 700;
+            color: #dc3545;
+            margin-bottom: 1rem;
+        }
+        .error-message {
+            font-size: 1.2rem;
+            color: #6c757d;
+            margin-bottom: 2rem;
+        }
+        .btn-back {
+            background-color: #4361ee;
+            border-color: #4361ee;
+            padding: 0.8rem 2rem;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .btn-back:hover {
+            background-color: #3730a3;
+            border-color: #3730a3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+        }
+    </style>
+</head>
+<body th:style="${themeSettings.backgroundImageUrl != null ? 'background-image: url(' + themeSettings.backgroundImageUrl + ');' : ''}">
+    <div class="error-container">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="error-code" th:text="${errorCode}">500</div>
+                <div class="error-message" th:text="${errorMessage}">Произошла ошибка</div>
+                <a href="/" class="btn btn-back text-white">Вернуться на главную</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

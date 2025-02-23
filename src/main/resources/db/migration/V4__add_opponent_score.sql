@@ -1,0 +1,1 @@
+ALTER TABLE games ADD COLUMN opponent_score INTEGER NOT NULL DEFAULT 0; 

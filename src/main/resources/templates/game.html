@@ -1,38 +1,319 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Games</title>
+    <title>Игра</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+        }
+        .game-container {
+            max-width: 800px;
+            margin: 40px auto;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .card-body {
+            padding: 2rem;
+        }
+        .player-name {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        .vs-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4a5568;
+            margin: 0 1rem;
+        }
+        .score-input {
+            width: 80px;
+            text-align: center;
+            font-size: 1.5rem;
+            padding: 0.5rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            margin: 0 1rem;
+        }
+        .score-input:focus {
+            border-color: #4361ee;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.3);
+        }
+        .score-container {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-top: 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .btn-save {
+            background-color: #4361ee;
+            border-color: #4361ee;
+            padding: 0.8rem 2rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .btn-save:hover {
+            background-color: #3730a3;
+            border-color: #3730a3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+        }
+        .btn-finish {
+            background-color: #10B981;
+            border-color: #10B981;
+            padding: 0.8rem 2rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            width: 250px;
+        }
+        .btn-finish:hover {
+            background-color: #059669;
+            border-color: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        .btn-waiting {
+            background-color: #6B7280;
+            border-color: #6B7280;
+            padding: 0.8rem 2rem;
+            font-weight: 500;
+            width: 250px;
+            cursor: default;
+        }
+        .btn-waiting:hover {
+            background-color: #6B7280;
+            border-color: #6B7280;
+        }
+        .results-table {
+            margin-top: 2rem;
+            width: 100%;
+        }
+        .results-table th {
+            background-color: #f3f4f6;
+            padding: 1rem;
+            font-weight: 500;
+            text-align: center;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .results-table td {
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .results-table tr:hover {
+            background-color: #f9fafb;
+        }
+        .table-container {
+            margin-top: 3rem;
+            background-color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .table-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .btn-new-game {
+            background-color: #10B981;
+            border-color: #10B981;
+            padding: 0.8rem 2rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            width: 250px;
+        }
+        .btn-new-game:hover {
+            background-color: #059669;
+            border-color: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+    </style>
 </head>
-<body>
-<h1>Game List</h1>
+<body th:style="${themeSettings.backgroundImageUrl != null ? 'background-image: url(' + themeSettings.backgroundImageUrl + ');' : ''}"
+    <div class="game-container">
+        <div class="card">
+            <div class="card-body text-center">
+                <h2 class="mb-4">Начинаем игру</h2>
+                <div class="d-flex justify-content-center align-items-center mb-4">
+                    <span class="player-name" th:text="${game.player.username}">Игрок 1</span>
+                    <span class="vs-text">VS</span>
+                    <span class="player-name" th:text="${game.opponent.username}">Игрок 2</span>
+                </div>
+                
+                <form id="gameScoreForm" class="score-container">
+                    <input type="hidden" name="gameId" th:value="${game.id}">
+                    <div class="d-flex justify-content-center align-items-center mb-4">
+                        <div>
+                            <label class="d-block mb-2" th:text="${game.player.username}">Игрок 1</label>
+                            <input type="number" name="playerScore" class="score-input" min="0" required>
+                        </div>
+                        <span class="vs-text">:</span>
+                        <div>
+                            <label class="d-block mb-2" th:text="${game.opponent.username}">Игрок 2</label>
+                            <input type="number" name="opponentScore" class="score-input" min="0" required>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button id="finishGameBtn" class="btn btn-finish">Завершить партию</button>
+                        <button id="saveAndExitBtn" class="btn btn-secondary ml-2">Сохранить и выйти</button>
+                        <a href="/profile" class="btn btn-outline-secondary ml-2">Вернуться в профиль</a>
+                    </div>
+                </form>
 
-<table>
-    <thead>
-    <tr>
-        <th>ID</th>
-        <th>PLAYER 1</th>
-        <th>SCORE</th>
-        <th>PLAYER 2</th>
-        <th>SCORE</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="game : ${games}">
-        <td th:text = "${game.id}">1</td>
-        <td th:text = "${game.player1.username}">Player 1</td>
-        <td th:text = "${game.playerScore1}">0</td>
-        <td th:text = "${game.player2.username}">2</td>
-        <td th:text = "${game.playerScore2}">0</td>
-    </tr>
-    </tbody>
-</table>
+                <div class="table-container">
+                    <div class="total-score text-center mb-4" th:if="${rounds != null and !rounds.empty}">
+                        <h4>
+                            <span>Общий счет: </span>
+                            <span th:with="playerTotal = ${#aggregates.sum(rounds.![playerScore])}">
+                                [[${playerTotal}]]
+                            </span>
+                            <span>:</span>
+                            <span th:with="opponentTotal = ${#aggregates.sum(rounds.![opponentScore])}">
+                                [[${opponentTotal}]]
+                            </span>
+                        </h4>
+                    </div>
+                    <h3 class="table-title">История партий</h3>
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Раунд</th>
+                                <th th:text="${game.player.username}">Игрок 1</th>
+                                <th></th>
+                                <th th:text="${game.opponent.username}">Игрок 2</th>
+                                <th>Дата</th>
+                            </tr>
+                        </thead>
+                        <tbody id="roundsTableBody">
+                            <tr th:each="round : ${rounds}">
+                                <td th:text="${round.roundNumber}">1</td>
+                                <td th:text="${round.playerScore}">0</td>
+                                <td>:</td>
+                                <td th:text="${round.opponentScore}">0</td>
+                                <td th:text="${#temporals.format(round.roundDate, 'dd.MM.yyyy HH:mm')}">01.01.2024 12:00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <script>
+        $(document).ready(function() {
+            function loadRounds() {
+                const gameId = $('input[name="gameId"]').val();
+                $.get(`/games/${gameId}/rounds`, function(rounds) {
+                    const tbody = $('#roundsTableBody');
+                    tbody.empty();
+                    
+                    // Подсчитываем общий счет
+                    let totalPlayerScore = 0;
+                    let totalOpponentScore = 0;
+                    
+                    rounds.forEach(round => {
+                        totalPlayerScore += round.playerScore;
+                        totalOpponentScore += round.opponentScore;
+                        
+                        const row = `
+                            <tr>
+                                <td>${round.roundNumber}</td>
+                                <td>${round.playerScore}</td>
+                                <td>:</td>
+                                <td>${round.opponentScore}</td>
+                                <td>${new Date(round.roundDate).toLocaleString('ru-RU')}</td>
+                            </tr>
+                        `;
+                        tbody.append(row);
+                    });
+                    
+                    // Обновляем общий счет в заголовке
+                    if (rounds.length > 0) {
+                        const totalScoreDiv = $('<div class="total-score text-center mb-4">');
+                        totalScoreDiv.html(`
+                            <h4>Общий счет: ${totalPlayerScore} : ${totalOpponentScore}</h4>
+                        `);
+                        // Добавляем или обновляем общий счет перед таблицей
+                        const existingTotalScore = $('.total-score');
+                        if (existingTotalScore.length) {
+                            existingTotalScore.replaceWith(totalScoreDiv);
+                        } else {
+                            $('.table-container').prepend(totalScoreDiv);
+                        }
+                    }
+                });
+            }
 
-<form action="/games/add-game" method="get">
-    <button type="submit" class="add-game-btn">Добавить игру</button>
-</form>
+            $('#finishGameBtn').click(function(e) {
+                e.preventDefault();
+                const gameId = $('input[name="gameId"]').val();
+                const playerScore = $('input[name="playerScore"]').val();
+                const opponentScore = $('input[name="opponentScore"]').val();
 
+                if (!playerScore || !opponentScore) {
+                    alert('Пожалуйста, введите счет для обоих игроков');
+                    return;
+                }
+
+                $.ajax({
+                    url: '/games/finish',
+                    type: 'POST',
+                    data: {
+                        gameId: gameId,
+                        playerScore: playerScore,
+                        opponentScore: opponentScore
+                    },
+                    success: function(response) {
+                        $('input[name="playerScore"]').val('');
+                        $('input[name="opponentScore"]').val('');
+                        loadRounds(); // Обновляем историю партий
+                    },
+                    error: function(xhr) {
+                        alert('Ошибка при сохранении результата: ' + xhr.responseText);
+                    }
+                });
+            });
+
+            $('#saveAndExitBtn').click(function(e) {
+                e.preventDefault();
+                const gameId = $('input[name="gameId"]').val();
+
+                $.ajax({
+                    url: '/games/finish-and-exit',
+                    type: 'POST',
+                    data: {
+                        gameId: gameId
+                    },
+                    success: function(response) {
+                        window.location.href = '/games/history';
+                    },
+                    error: function(xhr) {
+                        alert('Ошибка при сохранении результата: ' + xhr.responseText);
+                    }
+                });
+            });
+
+            // Загружаем раунды при загрузке страницы
+            loadRounds();
+        });
+    </script>
 </body>
 </html>

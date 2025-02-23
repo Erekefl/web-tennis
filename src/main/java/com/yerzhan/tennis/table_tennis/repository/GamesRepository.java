@@ -11,11 +11,9 @@ import java.util.Optional;
 
 @Repository
 public interface GamesRepository extends JpaRepository<Games, Integer> {
-    List<Games> findByPlayer_Username(String username);
-    List<Games> findByOpponent_Username(String username);
-    List<Games> findByOpponent_UsernameAndGameStatus(String username, GameStatus status);
-    List<Games> findByPlayer_UsernameAndGameStatus(String username, GameStatus status);
     Optional<Games> findByPlayerAndOpponentAndGameStatus(Users player, Users opponent, GameStatus status);
     List<Games> findByOpponentUsernameAndGameStatusIn(String username, List<GameStatus> statuses);
     List<Games> findByPlayerUsernameAndGameStatusIn(String username, List<GameStatus> statuses);
+    List<Games> findByPlayer_UsernameAndGameStatus(String username, GameStatus status);
+    List<Games> findByOpponent_UsernameAndGameStatus(String username, GameStatus status);
 }

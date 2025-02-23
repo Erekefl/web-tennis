@@ -10,7 +10,8 @@ import org.springframework.context.annotation.ComponentScan;
 	"com.yerzhan.tennis.table_tennis.service",
 	"com.yerzhan.tennis.table_tennis.service.impl",
 	"com.yerzhan.tennis.table_tennis.controller",
-	"com.yerzhan.tennis.table_tennis.config"
+	"com.yerzhan.tennis.table_tennis.config",
+	"com.yerzhan.tennis.table_tennis.mapper"
 })
 public class TableTennisGameApplication {
 

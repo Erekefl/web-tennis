@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -48,7 +47,6 @@ public class GamesService {
         game.setPlayer(player);
         game.setOpponent(opponent);
         game.setGameStatus(GameStatus.PENDING);
-        game.setGameDate(LocalDateTime.now());
 
         return gamesRepository.save(game);
     }

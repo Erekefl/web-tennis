@@ -3,11 +3,13 @@ package com.yerzhan.tennis.table_tennis.service.impl;
 import com.yerzhan.tennis.table_tennis.dto.AdminUpdateUserDTO;
 import com.yerzhan.tennis.table_tennis.dto.UserDTO;
 import com.yerzhan.tennis.table_tennis.entity.Users;
+import com.yerzhan.tennis.table_tennis.entity.Games;
 import com.yerzhan.tennis.table_tennis.mapper.UserMapper;
 import com.yerzhan.tennis.table_tennis.repository.UserRepository;
 import com.yerzhan.tennis.table_tennis.repository.GamesRepository;
 import com.yerzhan.tennis.table_tennis.repository.GameRoundRepository;
 import com.yerzhan.tennis.table_tennis.utils.Role;
+import com.yerzhan.tennis.table_tennis.utils.GameStatus;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.User;
@@ -36,7 +38,7 @@ public class UserDetailServiceImpl implements UserDetailsService {
 
         return User.withUsername(user.getUsername())
                 .password(user.getPassword())
-                .authorities(user.getAuthorities())
+                .authorities("ROLE_" + user.getRole().name())
                 .build();
     }
 
@@ -133,15 +135,15 @@ public class UserDetailServiceImpl implements UserDetailsService {
             }
         }
 
-        // Получаем все игры, где пользователь является игроком или оппонентом
-        var playerGames = gamesRepository.findByPlayer_Username(user.getUsername());
-        var opponentGames = gamesRepository.findByOpponent_Username(user.getUsername());
+        // Получаем все игры пользователя
+        List<Games> playerGames = gamesRepository.findByPlayerUsernameAndGameStatusIn(user.getUsername(), List.of(GameStatus.values()));
+        List<Games> opponentGames = gamesRepository.findByOpponentUsernameAndGameStatusIn(user.getUsername(), List.of(GameStatus.values()));
 
         // Удаляем раунды для всех игр
-        for (var game : playerGames) {
+        for (Games game : playerGames) {
             gameRoundRepository.deleteByGameId(game.getId());
         }
-        for (var game : opponentGames) {
+        for (Games game : opponentGames) {
             gameRoundRepository.deleteByGameId(game.getId());
         }
 

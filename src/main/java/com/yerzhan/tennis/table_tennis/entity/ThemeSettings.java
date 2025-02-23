@@ -17,7 +17,4 @@ public class ThemeSettings {
     
     @Column(name = "background_image_url")
     private String backgroundImageUrl;
-    
-    @Version
-    private Long version;
 } 

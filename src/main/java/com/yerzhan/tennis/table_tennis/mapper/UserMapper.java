@@ -13,7 +13,6 @@ import org.mapstruct.ReportingPolicy;
 public interface UserMapper {
     @Mapping(target = "authorities", ignore = true)
     @Mapping(target = "role", ignore = true)
-    @Mapping(target = "games", ignore = true)
     @Mapping(target = "accountNonExpired", ignore = true)
     @Mapping(target = "accountNonLocked", ignore = true)
     @Mapping(target = "credentialsNonExpired", ignore = true)

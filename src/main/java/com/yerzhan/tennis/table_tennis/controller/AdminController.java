@@ -4,6 +4,7 @@ import com.yerzhan.tennis.table_tennis.dto.AdminUpdateUserDTO;
 import com.yerzhan.tennis.table_tennis.service.impl.UserDetailServiceImpl;
 import com.yerzhan.tennis.table_tennis.service.ThemeSettingsService;
 import com.yerzhan.tennis.table_tennis.service.FileStorageService;
+import com.yerzhan.tennis.table_tennis.service.SliderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,10 +24,12 @@ public class AdminController {
     private final UserDetailServiceImpl userService;
     private final ThemeSettingsService themeSettingsService;
     private final FileStorageService fileStorageService;
+    private final SliderService sliderService;
 
     @GetMapping
     public String adminPage(Model model) {
         model.addAttribute("users", userService.getAllUsers());
+        model.addAttribute("slides", sliderService.getAllSlides());
         model.addAttribute("themeSettings", themeSettingsService.getCurrentSettings());
         return "admin/admin";
     }
@@ -94,6 +97,60 @@ public class AdminController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", 
                 "Ошибка при обновлении фонового изображения: " + e.getMessage());
+        }
+        return "redirect:/admin";
+    }
+
+    @PostMapping("/slider/add")
+    public String addSlide(@RequestParam("image") MultipartFile image,
+                          @RequestParam(value = "displayOrder", required = false) Integer displayOrder,
+                          RedirectAttributes redirectAttributes) {
+        try {
+            sliderService.addSlide(image, displayOrder);
+            redirectAttributes.addFlashAttribute("success", "Слайд успешно добавлен");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", 
+                "Ошибка при добавлении слайда: " + e.getMessage());
+        }
+        return "redirect:/admin";
+    }
+
+    @PostMapping("/slider/delete/{id}")
+    public String deleteSlide(@PathVariable Integer id,
+                            RedirectAttributes redirectAttributes) {
+        try {
+            sliderService.deleteSlide(id);
+            redirectAttributes.addFlashAttribute("success", "Слайд успешно удален");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", 
+                "Ошибка при удалении слайда: " + e.getMessage());
+        }
+        return "redirect:/admin";
+    }
+
+    @PostMapping("/slider/toggle/{id}")
+    public String toggleSlideStatus(@PathVariable Integer id,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            sliderService.toggleSlideStatus(id);
+            redirectAttributes.addFlashAttribute("success", "Статус слайда успешно изменен");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", 
+                "Ошибка при изменении статуса слайда: " + e.getMessage());
+        }
+        return "redirect:/admin";
+    }
+
+    @PostMapping("/slider/order")
+    public String updateSlideOrder(@RequestParam Integer slideId,
+                                 @RequestParam Integer newOrder,
+                                 RedirectAttributes redirectAttributes) {
+        try {
+            sliderService.updateDisplayOrder(slideId, newOrder);
+            redirectAttributes.addFlashAttribute("success", "Порядок слайдов успешно обновлен");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", 
+                "Ошибка при обновлении порядка слайдов: " + e.getMessage());
         }
         return "redirect:/admin";
     }

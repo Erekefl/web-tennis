@@ -1,0 +1,3 @@
+ALTER TABLE games
+    ADD COLUMN player_points INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN opponent_points INTEGER NOT NULL DEFAULT 0; 

@@ -36,6 +36,12 @@ public class Games {
     @Column(nullable = false)
     private int opponentScore = 0;
 
+    @Column(name = "player_points", nullable = false)
+    private int playerPoints = 0;
+
+    @Column(name = "opponent_points", nullable = false)
+    private int opponentPoints = 0;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "game_status", nullable = false)
     private GameStatus gameStatus;

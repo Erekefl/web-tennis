@@ -5,16 +5,23 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Configuration
 public class FileUploadConfig implements WebMvcConfigurer {
 
-    @Value("${app.upload.dir:${user.home}/uploads}")
+    @Value("${app.upload.dir}")
     private String uploadDir;
 
     @Override
     public void addResourceHandlers(@NonNull ResourceHandlerRegistry registry) {
+        Path uploadPath = Paths.get(uploadDir);
+        String uploadAbsolutePath = uploadPath.toFile().getAbsolutePath();
+        
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:" + uploadDir + "/");
+                .addResourceLocations("file:" + uploadAbsolutePath + "/")
+                .setCachePeriod(3600)
+                .resourceChain(true);
     }
 } 

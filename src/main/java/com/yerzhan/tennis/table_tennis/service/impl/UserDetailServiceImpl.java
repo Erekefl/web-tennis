@@ -12,14 +12,18 @@ import com.yerzhan.tennis.table_tennis.utils.Role;
 import com.yerzhan.tennis.table_tennis.utils.GameStatus;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -78,8 +82,11 @@ public class UserDetailServiceImpl implements UserDetailsService {
         Users user = userRepository.findById(dto.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
 
+        String oldUsername = user.getUsername();
+        String newUsername = dto.getUsername();
+
         // Проверяем, не существует ли другой пользователь с таким же именем
-        userRepository.findByUsername(dto.getUsername())
+        userRepository.findByUsername(newUsername)
                 .ifPresent(existingUser -> {
                     if (!dto.getId().equals(existingUser.getId())) {
                         throw new IllegalStateException("Пользователь с таким именем уже существует");
@@ -87,19 +94,44 @@ public class UserDetailServiceImpl implements UserDetailsService {
                 });
 
         // Обновляем имя пользователя
-        user.setUsername(dto.getUsername());
+        user.setUsername(newUsername);
+
+        // Получаем все игры, где пользователь является игроком или оппонентом
+        List<Games> playerGames = gamesRepository.findByPlayerUsernameAndGameStatusIn(oldUsername, List.of(GameStatus.values()));
+        List<Games> opponentGames = gamesRepository.findByOpponentUsernameAndGameStatusIn(oldUsername, List.of(GameStatus.values()));
+
+        // Обновляем имя пользователя во всех играх
+        for (Games game : playerGames) {
+            game.getPlayer().setUsername(newUsername);
+        }
+        for (Games game : opponentGames) {
+            game.getOpponent().setUsername(newUsername);
+        }
+
+        // Сохраняем обновленные игры
+        gamesRepository.saveAll(playerGames);
+        gamesRepository.saveAll(opponentGames);
 
         // Сохраняем обновленного пользователя
-        userRepository.save(user);
+        Users savedUser = userRepository.save(user);
+
+        // Обновляем аутентификацию пользователя
+        UserDetails updatedUserDetails = User.withUsername(savedUser.getUsername())
+                .password(savedUser.getPassword())
+                .authorities("ROLE_" + savedUser.getRole().name())
+                .build();
+
+        Authentication newAuth = new UsernamePasswordAuthenticationToken(
+                updatedUserDetails,
+                updatedUserDetails.getPassword(),
+                updatedUserDetails.getAuthorities()
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(newAuth);
     }
 
-    public Users findByUsername(String username) {
-        if (username == null || username.trim().isEmpty()) {
-            throw new IllegalArgumentException("Имя пользователя не может быть пустым");
-        }
-        
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден: " + username));
+    public Optional<Users> findByUsername(String username) {
+        return userRepository.findByUsername(username);
     }
 
     public List<Users> getAllUsers() {

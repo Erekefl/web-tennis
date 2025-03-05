@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Рейтинг игроков</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            background-size: cover;
+            background-position: center;
+        }
+        .nav-container {
+            padding: 1rem 2rem;
+            background-color: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .nav-link {
+            color: #2c3e50;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            margin: 0 0.5rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        .nav-link:hover {
+            color: #4361ee;
+            transform: translateY(-2px);
+        }
+        .nav-list {
+            display: flex;
+            justify-content: flex-end;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .nav-item {
+            margin-left: 2rem;
+        }
+        .rating-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .rating-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .rating-table {
+            width: 100%;
+            margin-top: 2rem;
+        }
+        .rating-table th {
+            background-color: #4361ee;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        .rating-table td {
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .rating-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        .position {
+            font-weight: bold;
+            color: #4361ee;
+        }
+        .player-name {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        .games-count {
+            color: #4a5568;
+        }
+        .win-rate {
+            font-weight: 500;
+        }
+        .high-rate {
+            color: #10B981;
+        }
+        .medium-rate {
+            color: #F59E0B;
+        }
+        .low-rate {
+            color: #DC2626;
+        }
+    </style>
+</head>
+<body th:style="${themeSettings != null && themeSettings.backgroundImageUrl != null ? 'background-image: url(' + themeSettings.backgroundImageUrl + ');' : ''}">
+    <div class="nav-container">
+        <nav>
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="/rating" class="nav-link">Рейтинг</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/" class="nav-link">Главная</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/rules" class="nav-link">Правила</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/guest" class="nav-link">Гостевой режим</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/register" class="nav-link">Регистрация</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/login" class="nav-link">Вход</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <div class="rating-container">
+        <h1 class="rating-title">Рейтинг игроков</h1>
+        
+        <table class="rating-table">
+            <thead>
+                <tr>
+                    <th>Позиция</th>
+                    <th>Игрок</th>
+                    <th>Всего игр</th>
+                    <th>Победы</th>
+                    <th>Поражения</th>
+                    <th>Процент побед</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="player, stat : ${players}">
+                    <td class="position" th:text="${stat.index + 1}">1</td>
+                    <td class="player-name" th:text="${player.username}">Игрок</td>
+                    <td class="games-count" th:text="${player.totalGames}">10</td>
+                    <td th:text="${player.wins}">7</td>
+                    <td th:text="${player.losses}">3</td>
+                    <td>
+                        <span th:class="${player.winRate >= 70 ? 'win-rate high-rate' : 
+                                       (player.winRate >= 40 ? 'win-rate medium-rate' : 'win-rate low-rate')}"
+                              th:text="${player.winRate + '%'}">70%</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html> 

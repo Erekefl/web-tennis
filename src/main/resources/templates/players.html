@@ -2,29 +2,69 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Список игроков</title>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
+    <script th:inline="javascript">
         $(document).ready(function() {
+            const token = $("meta[name='_csrf']").attr("content");
+            const header = $("meta[name='_csrf_header']").attr("content");
+
+            console.log('CSRF token:', token);
+            console.log('CSRF header:', header);
+
+            $(document).ajaxSend(function(e, xhr, options) {
+                xhr.setRequestHeader(header, token);
+            });
+
             $('.invite-player-form').submit(function(e) {
                 e.preventDefault();
                 const form = $(this);
                 const button = form.find('button');
                 const opponentUsername = form.find('input[name="opponentUsername"]').val();
                 
+                console.log('Отправка приглашения игроку:', opponentUsername);
+                
                 button.prop('disabled', true);
+                button.text('Отправка приглашения...');
                 
                 $.ajax({
                     url: '/games/create',
                     type: 'POST',
+                    contentType: 'application/x-www-form-urlencoded',
                     data: { opponentUsername: opponentUsername },
-                    success: function(response) {
-                        window.location.href = '/profile';
+                    beforeSend: function(xhr) {
+                        console.log('Отправка запроса...');
+                        xhr.setRequestHeader(header, token);
                     },
-                    error: function(xhr) {
+                    success: function(response) {
+                        console.log('Успешно создана игра:', response);
+                        // Обновляем списки приглашений
+                        $.get('/profile/sent-invites', function(sentInvitesHtml) {
+                            $('#sentInvitesList').html(sentInvitesHtml);
+                        });
+                        $.get('/profile/invites', function(invitesHtml) {
+                            $('#invitedPlayersList').html(invitesHtml);
+                        });
+                        window.location.href = '/games/history';
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Ошибка при создании игры:');
+                        console.error('Статус:', status);
+                        console.error('Ошибка:', error);
+                        console.error('Ответ сервера:', xhr.responseText);
+                        
                         button.prop('disabled', false);
-                        const errorMessage = xhr.responseText || 'Произошла ошибка при отправке приглашения';
+                        button.text('Пригласить игрока');
+                        
+                        let errorMessage;
+                        try {
+                            errorMessage = xhr.responseText || 'Произошла ошибка при отправке приглашения';
+                        } catch (e) {
+                            errorMessage = 'Произошла ошибка при отправке приглашения';
+                        }
                         alert(errorMessage);
                     }
                 });
@@ -123,7 +163,7 @@
             </div>
         </div>
         <div class="text-center">
-            <a href="/profile" class="btn btn-secondary">Вернуться в профиль</a>
+            <a href="/games/history" class="btn btn-secondary">Мои игры</a>
         </div>
     </div>
 </body>

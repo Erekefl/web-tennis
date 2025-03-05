@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Правила игры в настольный теннис</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            background-size: cover;
+            background-position: center;
+        }
+        .nav-container {
+            padding: 1rem 2rem;
+            background-color: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .nav-link {
+            color: #2c3e50;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            margin: 0 0.5rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        .nav-link:hover {
+            color: #4361ee;
+            transform: translateY(-2px);
+        }
+        .nav-list {
+            display: flex;
+            justify-content: flex-end;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .nav-item {
+            margin-left: 2rem;
+        }
+        .rules-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .rules-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .rules-section {
+            margin-bottom: 2rem;
+        }
+        .rules-section h3 {
+            color: #4361ee;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        .rules-section p {
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        .rules-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .rules-list li {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        .rules-list li:before {
+            content: "•";
+            color: #4361ee;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+    </style>
+</head>
+<body th:style="${themeSettings != null && themeSettings.backgroundImageUrl != null ? 'background-image: url(' + themeSettings.backgroundImageUrl + ');' : ''}">
+    <div class="nav-container">
+        <nav>
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="/rating" class="nav-link">Рейтинг</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/" class="nav-link">Главная</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/rules" class="nav-link">Правила</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/guest" class="nav-link">Гостевой режим</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/register" class="nav-link">Регистрация</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/login" class="nav-link">Вход</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <div class="rules-container">
+        <h1 class="rules-title">Правила игры в настольный теннис</h1>
+        
+        <div class="rules-section">
+            <h3>1️⃣ Цель игры</h3>
+            <ul class="rules-list">
+                <li>Игроки пытаются набрать больше очков, чем соперник, отбивая мяч с помощью ракетки так, чтобы он один раз коснулся стола на стороне противника.</li>
+            </ul>
+        </div>
+
+        <div class="rules-section">
+            <h3>2️⃣ Начало игры</h3>
+            <ul class="rules-list">
+                <li>Определяется право первой подачи (обычно жребием)</li>
+                <li>Игроки меняются подачами каждые 2 розыгрыша (в решающем гейме – после каждого очка)</li>
+            </ul>
+        </div>
+
+        <div class="rules-section">
+            <h3>3️⃣ Подача</h3>
+            <ul class="rules-list">
+                <li>Мяч подбрасывается вверх не менее чем на 16 см</li>
+                <li>Удар совершается так, чтобы мяч сначала коснулся своей половины стола, а затем – половины соперника</li>
+                <li>Если мяч задевает сетку, но попадает на сторону соперника – подача переигрывается (лет)</li>
+            </ul>
+        </div>
+
+        <div class="rules-section">
+            <h3>4️⃣ Правила игры</h3>
+            <h4 style="color: #2c3e50; margin: 1rem 0;">✅ Очко засчитывается, если:</h4>
+            <ul class="rules-list">
+                <li>Соперник не успел отбить мяч</li>
+                <li>Соперник попал мячом мимо стола</li>
+                <li>Соперник дважды подряд ударил по мячу</li>
+                <li>Мяч коснулся тела соперника (кроме ракетки)</li>
+                <li>Подающий сделал неправильную подачу</li>
+            </ul>
+        </div>
+
+        <div class="rules-section">
+            <h3>5️⃣ Подсчет очков и победа</h3>
+            <ul class="rules-list">
+                <li>Обычный гейм играется до 11 очков</li>
+                <li>Если счет 10:10, игра продолжается до разницы в 2 очка (например, 12:10, 13:11 и т. д.)</li>
+                <li>Матч обычно играется до 3 или 4 выигранных геймов (например, 3:0, 3:1, 4:2)</li>
+            </ul>
+        </div>
+
+        <div class="rules-section">
+            <h3>6️⃣ Дополнительные правила</h3>
+            <ul class="rules-list">
+                <li>После каждого гейма игроки меняются сторонами стола</li>
+                <li>В решающем гейме (например, при счете 2:2) игроки меняются сторонами после 5 очков</li>
+            </ul>
+            
+            <h4 style="color: #dc3545; margin: 1rem 0;">🚫 Запрещено:</h4>
+            <ul class="rules-list">
+                <li>Задевать стол руками</li>
+                <li>Ударять мяч, пока он не коснулся стола</li>
+                <li>Коснуться сетки</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html> 

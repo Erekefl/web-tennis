@@ -1,8 +1,9 @@
 package com.yerzhan.tennis.table_tennis.service.impl;
 
+import com.yerzhan.tennis.table_tennis.dto.PlayerStatsDTO;
 import com.yerzhan.tennis.table_tennis.entity.Games;
-import com.yerzhan.tennis.table_tennis.entity.Users;
 import com.yerzhan.tennis.table_tennis.entity.GameRound;
+import com.yerzhan.tennis.table_tennis.entity.Users;
 import com.yerzhan.tennis.table_tennis.repository.GamesRepository;
 import com.yerzhan.tennis.table_tennis.repository.UserRepository;
 import com.yerzhan.tennis.table_tennis.repository.GameRoundRepository;
@@ -10,10 +11,13 @@ import com.yerzhan.tennis.table_tennis.repository.ChatMessageRepository;
 import com.yerzhan.tennis.table_tennis.utils.GameStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -60,7 +64,7 @@ public class GamesService {
     public List<Games> getInvitedPlayers(String username) {
         List<Games> games = gamesRepository.findByOpponentUsernameAndGameStatusIn(
             username, 
-            Arrays.asList(GameStatus.PENDING, GameStatus.ACCEPTED, GameStatus.REJECTED)
+            Arrays.asList(GameStatus.PENDING, GameStatus.ACCEPTED)
         );
         games.forEach(game -> checkUnreadMessages(game, username));
         return games;
@@ -69,7 +73,7 @@ public class GamesService {
     public List<Games> getSentInvites(String username) {
         List<Games> games = gamesRepository.findByPlayerUsernameAndGameStatusIn(
             username,
-            Arrays.asList(GameStatus.PENDING, GameStatus.ACCEPTED, GameStatus.REJECTED)
+            Arrays.asList(GameStatus.PENDING, GameStatus.ACCEPTED)
         );
         games.forEach(game -> checkUnreadMessages(game, username));
         return games;
@@ -133,17 +137,25 @@ public class GamesService {
         Games game = gamesRepository.findById(gameId)
                 .orElseThrow(() -> new RuntimeException("Игра не найдена"));
 
-        // Проверяем, что текущий пользователь является отправителем приглашения
-        if (!game.getPlayer().getUsername().equals(username)) {
-            throw new RuntimeException("Только отправитель приглашения может завершить игру");
+        if (!username.equals(game.getPlayer().getUsername()) && !username.equals(game.getOpponent().getUsername())) {
+            throw new RuntimeException("У вас нет прав для завершения этой игры");
         }
 
-        // Проверяем корректность счета
-        if (playerScore < 0 || opponentScore < 0) {
-            throw new RuntimeException("Счет не может быть отрицательным");
+        // Проверяем, что счет не равный
+        if (playerScore.equals(opponentScore)) {
+            throw new RuntimeException("Счет не может быть равным. Один из игроков должен победить.");
         }
 
-        // Создаем новую партию
+        // Определяем, кто выиграл раунд
+        int playerPoint = 0;
+        int opponentPoint = 0;
+        if (playerScore > opponentScore) {
+            playerPoint = 1;
+        } else {
+            opponentPoint = 1;
+        }
+
+        // Сохраняем результаты раунда
         GameRound round = new GameRound();
         round.setGame(game);
         round.setPlayerScore(playerScore);
@@ -151,15 +163,17 @@ public class GamesService {
         round.setRoundNumber(gameRoundRepository.findByGameIdOrderByRoundDateDesc(gameId).size() + 1);
         gameRoundRepository.save(round);
 
-        // Получаем все раунды и обновляем общий счет
-        List<GameRound> rounds = gameRoundRepository.findByGameIdOrderByRoundDateDesc(gameId);
-        int totalPlayerScore = rounds.stream().mapToInt(GameRound::getPlayerScore).sum();
-        int totalOpponentScore = rounds.stream().mapToInt(GameRound::getOpponentScore).sum();
+        // Обновляем общий счет и баллы
+        game.setPlayerScore(game.getPlayerScore() + playerScore);
+        game.setOpponentScore(game.getOpponentScore() + opponentScore);
+        game.setPlayerPoints(game.getPlayerPoints() + playerPoint);
+        game.setOpponentPoints(game.getOpponentPoints() + opponentPoint);
 
-        // Обновляем общий счет в игре
-        game.setPlayerScore(totalPlayerScore);
-        game.setOpponentScore(totalOpponentScore);
-        game.setGameStatus(GameStatus.ACCEPTED);
+        // Если сыграно 5 раундов, завершаем игру
+        if (gameRoundRepository.findByGameIdOrderByRoundDateDesc(gameId).size() >= 5) {
+            game.setGameStatus(GameStatus.FINISHED);
+        }
+
         gamesRepository.save(game);
     }
 
@@ -179,7 +193,7 @@ public class GamesService {
         int totalPlayerScore = rounds.stream().mapToInt(GameRound::getPlayerScore).sum();
         int totalOpponentScore = rounds.stream().mapToInt(GameRound::getOpponentScore).sum();
 
-        // Устанавливаем общий счет игры и статус FINISHED
+        // Устанавливаем общий счет и статус FINISHED
         game.setPlayerScore(totalPlayerScore);
         game.setOpponentScore(totalOpponentScore);
         game.setGameStatus(GameStatus.FINISHED);
@@ -260,6 +274,49 @@ public class GamesService {
         }
 
         return game;
+    }
+
+    public List<PlayerStatsDTO> getPlayersStats() {
+        List<Users> allUsers = userRepository.findAll();
+        List<PlayerStatsDTO> playerStats = new ArrayList<>();
+
+        for (Users user : allUsers) {
+            PlayerStatsDTO stats = new PlayerStatsDTO();
+            stats.setUsername(user.getUsername());
+
+            // Получаем все завершенные игры пользователя
+            List<Games> playerGames = gamesRepository.findByPlayer_UsernameAndGameStatus(user.getUsername(), GameStatus.FINISHED);
+            List<Games> opponentGames = gamesRepository.findByOpponent_UsernameAndGameStatus(user.getUsername(), GameStatus.FINISHED);
+
+            int wins = 0;
+            int totalGames = playerGames.size() + opponentGames.size();
+
+            // Подсчитываем победы в играх, где пользователь был игроком
+            for (Games game : playerGames) {
+                if (game.getPlayerPoints() > game.getOpponentPoints()) {
+                    wins++;
+                }
+            }
+
+            // Подсчитываем победы в играх, где пользователь был оппонентом
+            for (Games game : opponentGames) {
+                if (game.getOpponentPoints() > game.getPlayerPoints()) {
+                    wins++;
+                }
+            }
+
+            stats.setTotalGames(totalGames);
+            stats.setWins(wins);
+            stats.setLosses(totalGames - wins);
+            stats.calculateWinRate();
+
+            playerStats.add(stats);
+        }
+
+        // Сортируем по проценту побед (по убыванию)
+        playerStats.sort((a, b) -> Double.compare(b.getWinRate(), a.getWinRate()));
+
+        return playerStats;
     }
 
 }

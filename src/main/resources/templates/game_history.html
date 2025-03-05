@@ -90,7 +90,7 @@
         }
     </style>
 </head>
-<body th:style="${themeSettings.backgroundImageUrl != null ? 'background-image: url(' + themeSettings.backgroundImageUrl + ');' : ''}"
+<body th:style="${themeSettings.backgroundImageUrl != null ? 'background-image: url(' + themeSettings.backgroundImageUrl + ');' : ''}">
     <div class="history-container">
         <div class="card">
             <div class="card-body">
@@ -116,18 +116,25 @@
                             <tr>
                                 <th>Раунд</th>
                                 <th th:text="${game.player.username}">Игрок 1</th>
-                                <th></th>
                                 <th th:text="${game.opponent.username}">Игрок 2</th>
-                                <th>Дата</th>
+                                <th>Победитель</th>
+                                <th th:text="'Баллы ' + ${game.player.username}">Баллы 1</th>
+                                <th th:text="'Баллы ' + ${game.opponent.username}">Баллы 2</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr th:each="round : ${rounds}">
                                 <td th:text="${round.roundNumber}">1</td>
-                                <td class="round-score" th:text="${round.playerScore}">0</td>
-                                <td>:</td>
-                                <td class="round-score" th:text="${round.opponentScore}">0</td>
-                                <td th:text="${#temporals.format(round.roundDate, 'dd.MM.yyyy HH:mm')}">01.01.2024 12:00</td>
+                                <td th:text="${round.playerScore}">0</td>
+                                <td th:text="${round.opponentScore}">0</td>
+                                <td th:text="${round.playerScore > round.opponentScore ? game.player.username : (round.opponentScore > round.playerScore ? game.opponent.username : 'Ничья')}">Победитель</td>
+                                <td th:text="${round.playerScore > round.opponentScore ? '1' : '0'}">0</td>
+                                <td th:text="${round.opponentScore > round.playerScore ? '1' : '0'}">0</td>
+                            </tr>
+                            <tr class="total-points" style="font-weight: bold; background-color: #f8f9fa;">
+                                <td colspan="4">Общий балл:</td>
+                                <td th:text="${game.playerPoints}">0</td>
+                                <td th:text="${game.opponentPoints}">0</td>
                             </tr>
                         </tbody>
                     </table>
@@ -135,7 +142,6 @@
                 
                 <div class="text-center mt-4">
                     <a href="/games/history" class="btn btn-back mr-2">К списку игр</a>
-                    <a href="/profile" class="btn btn-back">В профиль</a>
                 </div>
             </div>
         </div>

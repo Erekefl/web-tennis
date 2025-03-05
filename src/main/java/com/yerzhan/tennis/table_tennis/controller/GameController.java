@@ -27,13 +27,24 @@ public class GameController {
     private final ThemeSettingsService themeSettingsService;
     private final ChatService chatService;
 
+    @PostMapping("/create-and-accept")
+    @ResponseBody
+    public ResponseEntity<?> createAndAcceptGame(@RequestParam String opponentUsername, Authentication authentication) {
+        try {
+            Games newGame = gamesService.createGame(authentication.getName(), opponentUsername);
+            gamesService.acceptGame(newGame.getId(), opponentUsername);
+            return ResponseEntity.ok().body(Map.of("id", newGame.getId()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PostMapping("/create")
     @ResponseBody
     public ResponseEntity<?> createGame(@RequestParam String opponentUsername, Authentication authentication) {
         try {
-            String currentUsername = authentication.getName();
-            Games game = gamesService.createGame(currentUsername, opponentUsername);
-            return ResponseEntity.ok().body(Map.of("gameId", game.getId()));
+            Games newGame = gamesService.createGame(authentication.getName(), opponentUsername);
+            return ResponseEntity.ok().body(Map.of("id", newGame.getId()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -42,14 +53,10 @@ public class GameController {
     @PostMapping("/accept")
     @ResponseBody
     public ResponseEntity<String> acceptInvite(@RequestParam Integer gameId, Authentication authentication) {
-        String username = authentication.getName();
-        log.info("Запрос на принятие приглашения: gameId={}, username={}", gameId, username);
         try {
-            gamesService.acceptGame(gameId, username);
-            log.info("Приглашение успешно принято: gameId={}", gameId);
+            gamesService.acceptGame(gameId, authentication.getName());
             return ResponseEntity.ok("Приглашение принято");
         } catch (Exception e) {
-            log.error("Ошибка при принятии приглашения: gameId={}, error={}", gameId, e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -57,14 +64,10 @@ public class GameController {
     @PostMapping("/reject")
     @ResponseBody
     public ResponseEntity<String> rejectInvite(@RequestParam Integer gameId, Authentication authentication) {
-        String username = authentication.getName();
-        log.info("Запрос на отклонение приглашения: gameId={}, username={}", gameId, username);
         try {
-            gamesService.rejectGame(gameId, username);
-            log.info("Приглашение успешно отклонено: gameId={}", gameId);
+            gamesService.rejectGame(gameId, authentication.getName());
             return ResponseEntity.ok("Приглашение отклонено");
         } catch (Exception e) {
-            log.error("Ошибка при отклонении приглашения: gameId={}, error={}", gameId, e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -72,14 +75,10 @@ public class GameController {
     @PostMapping("/cancel")
     @ResponseBody
     public ResponseEntity<String> cancelInvite(@RequestParam Integer gameId, Authentication authentication) {
-        String username = authentication.getName();
-        log.info("Запрос на отмену приглашения: gameId={}, username={}", gameId, username);
         try {
-            gamesService.cancelGame(gameId, username);
-            log.info("Приглашение успешно отменено: gameId={}", gameId);
+            gamesService.cancelGame(gameId, authentication.getName());
             return ResponseEntity.ok("Приглашение отменено");
         } catch (Exception e) {
-            log.error("Ошибка при отмене приглашения: gameId={}, error={}", gameId, e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -178,9 +177,36 @@ public class GameController {
     public String showAllGamesHistory(Authentication authentication, Model model) {
         String username = authentication.getName();
         List<Games> finishedGames = gamesService.getAllFinishedGames(username);
-        model.addAttribute("finishedGames", finishedGames);
+        
+        // Расчет статистики
+        int totalGames = finishedGames.size();
+        int totalWins = 0;
+        double winPercentage = 0.0;
+
+        for (Games game : finishedGames) {
+            if (game.getPlayer().getUsername().equals(username)) {
+                if (game.getPlayerPoints() > game.getOpponentPoints()) {
+                    totalWins++;
+                }
+            } else {
+                if (game.getOpponentPoints() > game.getPlayerPoints()) {
+                    totalWins++;
+                }
+            }
+        }
+
+        // Расчет процента побед
+        winPercentage = totalGames > 0 ? (double) totalWins / totalGames * 100 : 0.0;
+
+        model.addAttribute("totalGames", totalGames);
+        model.addAttribute("totalWins", totalWins);
+        model.addAttribute("winPercentage", winPercentage);
         model.addAttribute("currentUsername", username);
+        model.addAttribute("finishedGames", finishedGames);
+        model.addAttribute("invitedPlayers", gamesService.getInvitedPlayers(username));
+        model.addAttribute("sentInvites", gamesService.getSentInvites(username));
         model.addAttribute("themeSettings", themeSettingsService.getCurrentSettings());
+        
         return "games_history";
     }
 

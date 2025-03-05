@@ -2,6 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
   <title>Профиль</title>
+  <meta name="_csrf" th:content="${_csrf.token}"/>
+  <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
@@ -156,119 +158,225 @@
             color: white;
             text-decoration: none;
         }
+        .stats-container {
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin: 1rem auto;
+            max-width: 400px;
+        }
+        .stats-title {
+            color: #2c3e50;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        .stats-details {
+            font-size: 1.1rem;
+            color: #4a5568;
+        }
+        .stats-details p {
+            margin-bottom: 0.5rem;
+        }
+        .username-edit-container {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin: 1rem auto;
+            max-width: 400px;
+        }
+        .username-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        .username-text {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        .edit-button {
+            background: #4361ee;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 8px 15px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        .edit-button:hover {
+            background-color: #3730a3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+        }
+        .edit-button i {
+            font-size: 1rem;
+        }
+        .username-form {
+            display: none;
+        }
+        .username-form.active {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+        }
+        .username-input {
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        .username-input:focus {
+            border-color: #4361ee;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.3);
+        }
+        .btn-history {
+            background-color: #4361ee;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1rem;
+            margin-top: 1rem;
+        }
+        .btn-history:hover {
+            background-color: #3730a3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        .history-icon {
+            font-size: 1.2rem;
+        }
+        .button-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .back-button {
+            background: #6c757d;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 8px 15px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            text-decoration: none;
+        }
+        .back-button:hover {
+            background-color: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+            color: white;
+            text-decoration: none;
+        }
     </style>
+    <script th:inline="javascript">
+        $(document).ready(function() {
+            const token = $("meta[name='_csrf']").attr("content");
+            const header = $("meta[name='_csrf_header']").attr("content");
+
+            $.ajaxSetup({
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader(header, token);
+                }
+            });
+
+            function toggleEditForm() {
+                const displayElement = $('.username-display');
+                const formElement = $('.username-form');
+                const currentUsername = $('.username-text').text();
+                
+                if (formElement.hasClass('active')) {
+                    formElement.removeClass('active');
+                    displayElement.show();
+                } else {
+                    $('#newUsername').val(currentUsername);
+                    formElement.addClass('active');
+                    displayElement.hide();
+                }
+            }
+
+            function saveUsername() {
+                const newUsername = $('#newUsername').val();
+                
+                if (!newUsername || newUsername.trim() === '') {
+                    alert('Имя пользователя не может быть пустым');
+                    return;
+                }
+
+                $.ajax({
+                    url: '/update-username',
+                    type: 'POST',
+                    data: { newUsername: newUsername },
+                    success: function(response) {
+                        $('.username-text').text(newUsername);
+                        toggleEditForm();
+                        alert('Имя пользователя успешно обновлено');
+                    },
+                    error: function(xhr) {
+                        alert(xhr.responseText || 'Произошла ошибка при обновлении имени пользователя');
+                    }
+                });
+            }
+
+            function cancelEdit() {
+                toggleEditForm();
+            }
+
+            // Привязываем обработчики событий
+            $('.edit-button').click(toggleEditForm);
+            $('#saveUsername').click(saveUsername);
+            $('#cancelEdit').click(cancelEdit);
+        });
+    </script>
 </head>
-<body th:style="${themeSettings.backgroundImageUrl != null ? 'background-image: url(' + themeSettings.backgroundImageUrl + ');' : ''}"
+<body th:style="${themeSettings.backgroundImageUrl != null ? 'background-image: url(' + themeSettings.backgroundImageUrl + ');' : ''}">
 <div class="profile-container">
-        <div class="card">
-            <div class="card-body text-center">
-                <h2 class="mb-4">Профиль пользователя</h2>
-                <div class="username-badge mb-4">
-                    <span th:text="${username}">Имя пользователя</span>
-                </div>
-                <div class="d-flex justify-content-center">
-                    <a href="/players" class="btn btn-primary">
-                        <span>Добавить игру</span>
-                    </a>
-                    <a href="/games/history" class="btn btn-primary mx-2">
-                        <span>История игр</span>
-                    </a>
-                    <a href="/admin" class="btn btn-danger mx-2" 
-                       th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
-                        <span>Панель администратора</span>
-                    </a>
-                    <form th:action="@{/logout}" method="post" class="d-inline">
-                        <button type="submit" class="btn btn-danger">
-                            <span>Выйти</span>
-                        </button>
-                    </form>
-                </div>
-            </div>
+    <div class="username-edit-container">
+        <div class="username-display">
+            <span class="username-text" th:text="${username}"></span>
         </div>
-
-        <div class="card invited-players" th:fragment="invitedPlayersList">
-            <div class="card-body">
-                <h3 class="section-title">Полученные приглашения</h3>
-                <div th:if="${invitedPlayers == null || #lists.isEmpty(invitedPlayers)}" class="no-invites">
-                    Пока нет полученных приглашений
-                </div>
-                <ul th:if="${invitedPlayers != null && !#lists.isEmpty(invitedPlayers)}" class="invited-players-list">
-                    <!-- Показываем ожидающие приглашения -->
-                    <li th:each="game : ${invitedPlayers}" th:if="${game.gameStatus == T(com.yerzhan.tennis.table_tennis.utils.GameStatus).PENDING}"
-                        class="invited-player-item" th:id="'invite-' + ${game.id}">
-                        <span class="player-name" th:text="${game != null && game.player != null ? game.player.username : 'Неизвестный игрок'}">Имя игрока</span>
-                        <div class="d-flex align-items-center">
-                            <div class="d-flex">
-                                <button type="button" class="btn btn-success btn-sm mr-2 accept-invite" th:data-game-id="${game.id}">Принять</button>
-                                <button type="button" class="btn btn-danger btn-sm reject-invite" th:data-game-id="${game.id}">Отклонить</button>
-                            </div>
-                        </div>
-                    </li>
-                    <!-- Показываем принятые приглашения -->
-                    <li th:each="game : ${invitedPlayers}" th:if="${game.gameStatus == T(com.yerzhan.tennis.table_tennis.utils.GameStatus).ACCEPTED}"
-                        class="invited-player-item" th:id="'invite-' + ${game.id}">
-                        <span class="player-name" th:text="${game != null && game.player != null ? game.player.username : 'Неизвестный игрок'}">Имя игрока</span>
-                        <div class="d-flex align-items-center">
-                            <span class="badge badge-success">Ожидает начала игры</span>
-                            <a th:href="@{/games/{gameId}/chat(gameId=${game.id})}" class="btn-chat">
-                                <span th:if="${game.hasUnreadMessages}" class="unread-indicator"></span>
-                                <i class="fas fa-comments"></i> Чат
-                            </a>
-                        </div>
-                    </li>
-                    <!-- Показываем отклоненные приглашения -->
-                    <li th:each="game : ${invitedPlayers}" th:if="${game.gameStatus == T(com.yerzhan.tennis.table_tennis.utils.GameStatus).REJECTED}"
-                        class="invited-player-item" th:id="'invite-' + ${game.id}">
-                        <span class="player-name" th:text="${game != null && game.player != null ? game.player.username : 'Неизвестный игрок'}">Имя игрока</span>
-                        <div class="d-flex align-items-center">
-                            <span class="badge badge-warning">Вы отклонили приглашение</span>
-                        </div>
-                    </li>
-                </ul>
-            </div>
+        <div class="button-group">
+            <button class="edit-button">
+                <i class="fas fa-pencil-alt"></i>
+                Редактировать
+            </button>
+            <a href="/games/history" class="back-button">
+                <i class="fas fa-history"></i>
+                Вернуться в мои игры
+            </a>
         </div>
-
-        <div class="card invited-players" th:fragment="sentInvitesList">
-            <div class="card-body">
-                <h3 class="section-title">Отправленные приглашения</h3>
-                <div th:if="${sentInvites == null || #lists.isEmpty(sentInvites)}" class="no-invites">
-                    Пока нет отправленных приглашений
-                </div>
-                <ul th:if="${sentInvites != null && !#lists.isEmpty(sentInvites)}" class="invited-players-list">
-                    <!-- Сначала показываем ожидающие приглашения -->
-                    <li th:each="game : ${sentInvites}" th:if="${game.gameStatus == T(com.yerzhan.tennis.table_tennis.utils.GameStatus).PENDING}"
-                        class="invited-player-item" th:id="'game-' + ${game.id}">
-                        <span class="player-name" th:text="${game != null && game.opponent != null ? game.opponent.username : 'Неизвестный игрок'}">Имя игрока</span>
-                        <div class="d-flex align-items-center">
-                            <span class="badge badge-secondary mr-2">Ожидает подтверждения</span>
-                            <button type="button" class="btn btn-danger btn-sm cancel-invite" th:data-game-id="${game.id}">Отменить</button>
-                        </div>
-                    </li>
-                    <!-- Затем показываем принятые приглашения -->
-                    <li th:each="game : ${sentInvites}" th:if="${game.gameStatus == T(com.yerzhan.tennis.table_tennis.utils.GameStatus).ACCEPTED}"
-                        class="invited-player-item" th:id="'game-' + ${game.id}">
-                        <span class="player-name" th:text="${game != null && game.opponent != null ? game.opponent.username : 'Неизвестный игрок'}">Имя игрока</span>
-                        <div class="d-flex align-items-center">
-                            <a th:href="@{/games/start/{gameId}(gameId=${game.id})}" class="badge badge-success" style="text-decoration: none; cursor: pointer;">
-                                Приглашение принято • Ожидание игры
-                            </a>
-                            <a th:href="@{/games/{gameId}/chat(gameId=${game.id})}" class="btn-chat">
-                                <span th:if="${game.hasUnreadMessages}" class="unread-indicator"></span>
-                                <i class="fas fa-comments"></i> Чат
-                            </a>
-                        </div>
-                    </li>
-                    <!-- В конце показываем отклоненные приглашения -->
-                    <li th:each="game : ${sentInvites}" th:if="${game.gameStatus == T(com.yerzhan.tennis.table_tennis.utils.GameStatus).REJECTED}"
-                        class="invited-player-item" th:id="'game-' + ${game.id}">
-                        <span class="player-name" th:text="${game != null && game.opponent != null ? game.opponent.username : 'Неизвестный игрок'}">Имя игрока</span>
-                        <div class="d-flex align-items-center">
-                            <span class="badge badge-danger">Приглашение отклонено</span>
-                        </div>
-                    </li>
-                </ul>
-            </div>
+        <div class="username-form">
+            <input type="text" id="newUsername" class="username-input" placeholder="Новое имя пользователя">
+            <button type="button" class="btn btn-primary" id="saveUsername">Сохранить</button>
+            <button type="button" class="btn btn-danger" id="cancelEdit">Отмена</button>
         </div>
+    </div>
 </div>
 
     <script>

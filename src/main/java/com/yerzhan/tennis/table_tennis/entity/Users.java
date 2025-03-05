@@ -27,6 +27,9 @@ public class Users implements UserDetails {
     @Column(unique = true, nullable = false)
     private String username;
 
+    @Column(unique = true, nullable = false)
+    private String email;
+
     @JsonIgnore
     @Column(nullable = false)
     private String password;
@@ -34,6 +37,9 @@ public class Users implements UserDetails {
     @JsonIgnore
     @Enumerated(EnumType.STRING)
     private Role role = Role.USER;
+
+    @Column(nullable = false)
+    private boolean enabled = false;
 
     public void setDefaultRole() {
         this.role = Role.USER;
@@ -66,6 +72,6 @@ public class Users implements UserDetails {
     @JsonIgnore
     @Override
     public boolean isEnabled() {
-        return true;
+        return enabled;
     }
 }

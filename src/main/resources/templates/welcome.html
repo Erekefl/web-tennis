@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Настольный теннис</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            background-size: cover;
+            background-position: center;
+        }
+        .nav-container {
+            padding: 1rem 2rem;
+            background-color: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .nav-link {
+            color: #2c3e50;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            margin: 0 0.5rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        .nav-link:hover {
+            color: #4361ee;
+            transform: translateY(-2px);
+        }
+        .welcome-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            text-align: center;
+            margin-top: 4rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .nav-list {
+            display: flex;
+            justify-content: flex-end;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .nav-item {
+            margin-left: 2rem;
+        }
+        .photo-container {
+            width: 600px;
+            height: 400px;
+            margin: 3rem auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .slide.active {
+            opacity: 1;
+        }
+        .slide img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .slider-nav {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 1;
+        }
+        .slider-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .slider-dot.active {
+            background-color: #4361ee;
+        }
+    </style>
+</head>
+<body th:style="${themeSettings != null && themeSettings.backgroundImageUrl != null ? 'background-image: url(' + themeSettings.backgroundImageUrl + ');' : ''}">
+    <div class="nav-container">
+        <nav>
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="/rating" class="nav-link">Рейтинг</a>
+                </li>
+                <li class="nav-item" th:if="${isAuthenticated}">
+                    <a href="/games/history" class="nav-link">Мои игры</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/rules" class="nav-link">Правила</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/guest" class="nav-link">Гостевой режим</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/register" class="nav-link">Регистрация</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/login" class="nav-link">Вход</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    
+    <div class="container">
+        <h1 class="welcome-title">Добро пожаловать в игру!</h1>
+        
+        <div class="photo-container">
+            <div th:each="slide, iterStat : ${slides}" 
+                 th:class="${iterStat.first} ? 'slide active' : 'slide'">
+                <img th:src="${slide.imageUrl}" th:alt="'Слайд ' + ${iterStat.count}">
+            </div>
+            <div class="slider-nav">
+                <div th:each="slide, iterStat : ${slides}" 
+                     th:class="${iterStat.first} ? 'slider-dot active' : 'slider-dot'"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const slides = document.querySelectorAll('.slide');
+            const dots = document.querySelectorAll('.slider-dot');
+            let currentSlide = 0;
+            const slideInterval = 3000; // 3 секунды
+
+            if (slides.length === 0) return; // Если нет слайдов, прекращаем выполнение
+
+            function showSlide(index) {
+                slides.forEach(slide => slide.classList.remove('active'));
+                dots.forEach(dot => dot.classList.remove('active'));
+                
+                slides[index].classList.add('active');
+                dots[index].classList.add('active');
+            }
+
+            function nextSlide() {
+                currentSlide = (currentSlide + 1) % slides.length;
+                showSlide(currentSlide);
+            }
+
+            // Автоматическая смена слайдов
+            setInterval(nextSlide, slideInterval);
+
+            // Обработка кликов по точкам
+            dots.forEach((dot, index) => {
+                dot.addEventListener('click', () => {
+                    currentSlide = index;
+                    showSlide(currentSlide);
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

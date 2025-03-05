@@ -5,53 +5,55 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 @Service
 public class FileStorageService {
     private static final Logger logger = LoggerFactory.getLogger(FileStorageService.class);
+    private final Path fileStorageLocation;
 
-    @Value("${app.upload.dir:${user.home}/uploads}")
-    private String uploadDir;
+    public FileStorageService(@Value("${app.upload.dir}") String uploadDir) {
+        this.fileStorageLocation = Paths.get(uploadDir);
+        try {
+            Files.createDirectories(this.fileStorageLocation);
+        } catch (IOException ex) {
+            throw new RuntimeException("Не удалось создать директорию для загрузки файлов.", ex);
+        }
+    }
 
     public String storeFile(MultipartFile file) throws IOException {
         try {
-            // Создаем директорию, если она не существует
-            Path uploadPath = Paths.get(uploadDir);
-            if (!Files.exists(uploadPath)) {
-                logger.info("Создание директории для загрузки: {}", uploadPath);
-                Files.createDirectories(uploadPath);
+            if (file.isEmpty()) {
+                throw new IOException("Файл пуст");
             }
 
             // Генерируем уникальное имя файла
             String originalFileName = file.getOriginalFilename();
-            String fileExtension = ".tmp"; // расширение по умолчанию
-
-            if (originalFileName != null && !originalFileName.isEmpty()) {
-                int lastDotIndex = originalFileName.lastIndexOf(".");
-                if (lastDotIndex > 0) {
-                    fileExtension = originalFileName.substring(lastDotIndex);
-                }
-            }
-
+            String fileExtension = getFileExtension(originalFileName);
             String fileName = UUID.randomUUID().toString() + fileExtension;
-            logger.info("Сохранение файла с именем: {}", fileName);
 
             // Сохраняем файл
-            Path filePath = uploadPath.resolve(fileName);
-            Files.copy(file.getInputStream(), filePath);
-            logger.info("Файл успешно сохранен: {}", filePath);
+            Path targetLocation = this.fileStorageLocation.resolve(fileName);
+            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+            logger.info("Файл успешно сохранен: {}", targetLocation);
 
-            // Возвращаем относительный путь к файлу
+            // Возвращаем путь к файлу относительно /uploads/
             return "/uploads/" + fileName;
-        } catch (IOException e) {
-            logger.error("Ошибка при сохранении файла: {}", e.getMessage(), e);
-            throw e;
+        } catch (IOException ex) {
+            logger.error("Ошибка при сохранении файла: {}", ex.getMessage());
+            throw ex;
         }
+    }
+
+    private String getFileExtension(String fileName) {
+        if (fileName == null || fileName.lastIndexOf(".") == -1) {
+            return ".jpg"; // Расширение по умолчанию
+        }
+        return fileName.substring(fileName.lastIndexOf("."));
     }
 } 

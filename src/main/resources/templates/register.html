@@ -92,6 +92,19 @@
                     </div>
                     
                     <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" 
+                               class="form-control"
+                               th:class="${#fields.hasErrors('email')} ? 'form-control field-error' : 'form-control'"
+                               id="email" 
+                               th:field="*{email}" 
+                               placeholder="Введите email">
+                        <div class="error-message" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">
+                            Email Error
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
                         <label for="password">Пароль</label>
                         <input type="password" 
                                class="form-control"

@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>История игр</title>
+    <title>Мои игры</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <style>
         body {
             font-family: 'Roboto', sans-serif;
@@ -52,11 +56,28 @@
         .score {
             font-size: 1.3rem;
             font-weight: 600;
-            color: #2c3e50;
             background-color: #f8f9fa;
-            padding: 5px 15px;
+            padding: 8px 20px;
             border-radius: 8px;
             margin: 0 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .score-divider {
+            color: #4B5563;
+            font-weight: 500;
+        }
+        .score-number {
+            min-width: 30px;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+        .score-label {
+            font-size: 1rem;
+            color: #4B5563;
+            margin-bottom: 4px;
+            text-align: center;
         }
         .btn-back {
             background-color: #4361ee;
@@ -72,10 +93,12 @@
             box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
         }
         .current-user {
-            color: #4361ee;
+            color: #10B981;
+            font-weight: 600;
         }
         .opponent-user {
-            color: #10B981;
+            color: #DC2626;
+            font-weight: 600;
         }
         .game-info {
             display: flex;
@@ -93,13 +116,369 @@
             color: #6b7280;
             font-style: italic;
         }
+        .total-score-header {
+            display: none;
+        }
+        .total-score-header h3 {
+            display: none;
+        }
+        .total-score-header .score-number {
+            display: none;
+        }
+        .profile-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background-color: #4361ee;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        .profile-button:hover {
+            background-color: #3730a3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        .profile-icon {
+            font-size: 1.2rem;
+        }
+        .stats-card {
+            background-color: white !important;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+        .stats-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .stats-card h4 {
+            color: #4361ee;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        .stats-card p {
+            color: #4B5563;
+            font-size: 1.1rem;
+        }
+        .stats-card span {
+            color: #10B981;
+            font-weight: 600;
+        }
+        .btn-add-game {
+            background-color: #10B981;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1rem;
+        }
+        .btn-add-game:hover {
+            background-color: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        .add-icon {
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+        
+        .challenge-text {
+            color: #FF0000;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-top: 10px;
+            font-style: italic;
+            text-align: center;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Стили для блоков приглашений */
+        .invited-players {
+            margin-bottom: 2rem;
+        }
+        .invited-player-item {
+            background-color: white;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .no-invites {
+            text-align: center;
+            color: #6b7280;
+            padding: 1rem;
+        }
+        .section-title {
+            color: #2c3e50;
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+        .btn-chat {
+            position: relative;
+            background-color: #10B981;
+            border-color: #10B981;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-left: 1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+        .btn-chat:hover {
+            background-color: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        .unread-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: #FF4B4B;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: blink 1.5s infinite;
+        }
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .section-title {
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        .invited-players-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .invited-player-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s;
+        }
+        .invited-player-item:last-child {
+            border-bottom: none;
+        }
+        .invited-player-item:hover {
+            background-color: #f8f9fa;
+        }
+        .player-name {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        .btn-chat {
+            margin-left: 10px;
+            padding: 5px 10px;
+            text-decoration: none;
+            color: #6c757d;
+            position: relative;
+        }
+        .btn-chat:hover {
+            color: #495057;
+        }
+        .unread-indicator {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 8px;
+            height: 8px;
+            background-color: #dc3545;
+            border-radius: 50%;
+        }
+        .no-invites {
+            color: #6c757d;
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+        }
+        .badge-success {
+            background-color: #28a745;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-weight: normal;
+        }
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 0.875rem;
+            margin: 0 5px;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            border-color: #ffc107;
+            color: #212529;
+        }
+        .btn-warning:hover {
+            background-color: #e0a800;
+            border-color: #d39e00;
+        }
+        .accepted-invite-link {
+            color: #10B981;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .accepted-invite-link:hover {
+            color: #059669;
+            text-decoration: none;
+        }
+        .accepted-invite-static {
+            color: #10B981;
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 6px;
+            display: inline-block;
+            cursor: default;
+        }
+        .stats-container {
+            background-color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            transition: transform 0.2s;
+            position: relative;
+        }
+        .stats-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .stats-title {
+            color: #2c3e50;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        .stats-details {
+            font-size: 1.1rem;
+            color: #4a5568;
+        }
+        .stats-details p {
+            margin-bottom: 0.5rem;
+        }
+        .stats-details span {
+            color: #4361ee;
+            font-weight: 600;
+        }
     </style>
 </head>
-<body th:style="${themeSettings.backgroundImageUrl != null ? 'background-image: url(' + themeSettings.backgroundImageUrl + ');' : ''}"
+<body th:style="${themeSettings.backgroundImageUrl != null ? 'background-image: url(' + themeSettings.backgroundImageUrl + ');' : ''}">
     <div class="history-container">
+        <div class="stats-container mb-4 position-relative">
+            <a href="/profile" class="profile-button">
+                <span class="profile-icon">👤</span>
+                Профиль
+            </a>
+            <a href="/" class="profile-button" style="top: 4.5rem;">
+                <span class="profile-icon">🏠</span>
+                Вернуться на главную
+            </a>
+            <h4 class="stats-title">Ваша статистика:</h4>
+            <div class="stats-details">
+                <p>🏆 Побед: <span th:text="${totalWins}">0</span> (<span th:text="${#numbers.formatDecimal(winPercentage, 1, 1)}">0.0</span>%)</p>
+                <p>⚔️ Игр сыграно: <span th:text="${totalGames}">0</span></p>
+            </div>
+        </div>
         <div class="card">
             <div class="card-body">
-                <h2 class="text-center mb-4">История всех игр</h2>
+                <h2 class="text-center mb-4">Мои игры</h2>
+                <div class="welcome-message text-center mb-4">
+                    <h3>Добро пожаловать, <span th:text="${currentUsername}"></span>!</h3>
+                </div>
+                
+                <!-- Блоки приглашений -->
+                <div class="row mb-4">
+                    <!-- Полученные приглашения -->
+                    <div class="col-md-6">
+                        <div class="card invited-players">
+                            <div class="card-body">
+                                <h4 class="section-title">Полученные приглашения</h4>
+                                <div id="invitedPlayersList" th:fragment="invitedPlayersList">
+                                    <div th:if="${invitedPlayers.empty}" class="no-invites">
+                                        Нет полученных приглашений
+                                    </div>
+                                    <div th:each="invite : ${invitedPlayers}" class="invited-player-item">
+                                        <span th:text="${invite.player.username}">Игрок</span>
+                                        <div>
+                                            <span th:if="${invite.gameStatus.name() == 'ACCEPTED'}" class="accepted-invite-static">✓ Вы приняли приглашение от игрока <span th:text="${invite.player.username}"></span></span>
+                                            <div th:if="${invite.gameStatus.name() == 'PENDING'}" class="btn-group">
+                                                <button th:attr="data-game-id=${invite.id}" class="btn btn-success btn-sm accept-invite">Принять</button>
+                                                <button th:attr="data-game-id=${invite.id}" class="btn btn-danger btn-sm reject-invite">Отклонить</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Отправленные приглашения -->
+                    <div class="col-md-6">
+                        <div class="card" id="sentInvitesList">
+                            <div class="card-body">
+                                <h4 class="section-title">Отправленные приглашения</h4>
+                                <div th:fragment="sentInvitesList">
+                                    <div th:if="${#lists.isEmpty(sentInvites)}" class="no-invites">
+                                        Нет отправленных приглашений
+                                    </div>
+                                    <div th:each="invite : ${sentInvites}" class="invited-player-item">
+                                        <span th:text="${invite.opponent.username}">Игрок</span>
+                                        <div>
+                                            <a th:if="${invite.gameStatus.name() == 'ACCEPTED'}" th:href="@{/games/start/{gameId}(gameId=${invite.id})}" class="accepted-invite-link">✓ Приглашение принято</a>
+                                            <button th:if="${invite.gameStatus.name() == 'PENDING'}" th:attr="data-game-id=${invite.id}" class="btn btn-warning btn-sm cancel-invite">Отменить</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Кнопка добавления игры -->
+                <div class="text-center mb-4">
+                    <a href="/players" class="btn-add-game">
+                        <i class="fas fa-plus add-icon"></i>
+                        Начнем игру
+                    </a>
+                    <div class="challenge-text">Твои соперники выйгрывают... Ты готов бросить вызов?</div>
+                </div>
                 
                 <div th:if="${finishedGames.empty}" class="no-games">
                     <p>У вас пока нет завершенных игр.</p>
@@ -113,11 +492,14 @@
                                   th:text="${game.player.username == currentUsername ? game.player.username : game.opponent.username}">
                                 Игрок 1
                             </span>
-                            <span class="score">
-                                <span th:text="${game.player.username == currentUsername ? game.playerScore : game.opponentScore}">0</span>
-                                :
-                                <span th:text="${game.player.username == currentUsername ? game.opponentScore : game.playerScore}">0</span>
-                            </span>
+                            <div>
+                                <div class="score-label">Общий балл:</div>
+                                <span class="score">
+                                    <span class="score-number" th:text="${game.player.username == currentUsername ? game.playerPoints : game.opponentPoints}">0</span>
+                                    <span class="score-divider">:</span>
+                                    <span class="score-number" th:text="${game.player.username == currentUsername ? game.opponentPoints : game.playerPoints}">0</span>
+                                </span>
+                            </div>
                             <span class="player-name opponent-user"
                                   th:text="${game.player.username == currentUsername ? game.opponent.username : game.player.username}">
                                 Игрок 2
@@ -130,10 +512,194 @@
                 </div>
                 
                 <div class="text-center mt-4">
-                    <a href="/profile" class="btn btn-back">Вернуться в профиль</a>
                 </div>
             </div>
         </div>
     </div>
+    <script th:inline="javascript">
+        $(document).ready(function() {
+            const token = $("meta[name='_csrf']").attr("content");
+            const header = $("meta[name='_csrf_header']").attr("content");
+
+            $(document).ajaxSend(function(e, xhr, options) {
+                xhr.setRequestHeader(header, token);
+            });
+
+            // Функция для обновления списка полученных приглашений
+            function updateInvitedPlayersList() {
+                $.get('/profile/invites', function(response) {
+                    $('#invitedPlayersList').html(response);
+                });
+            }
+
+            // Функция для обновления списка отправленных приглашений
+            function updateSentInvitesList() {
+                $.get('/profile/sent-invites', function(response) {
+                    const sentInvitesContainer = $('#sentInvitesList .card-body');
+                    const newContent = $(response);
+                    
+                    // Обновляем каждое приглашение
+                    sentInvitesContainer.find('.invited-player-item').each(function() {
+                        const currentInvite = $(this);
+                        const username = currentInvite.find('span').first().text();
+                        
+                        // Находим соответствующее приглашение в новом контенте
+                        const newInvite = newContent.find('.invited-player-item').filter(function() {
+                            return $(this).find('span').first().text() === username;
+                        });
+                        
+                        if (newInvite.length) {
+                            const currentStatus = currentInvite.find('.btn-warning').length > 0 ? 'PENDING' : 'ACCEPTED';
+                            const newStatus = newInvite.find('.btn-warning').length > 0 ? 'PENDING' : 'ACCEPTED';
+                            
+                            // Если статус изменился, обновляем содержимое
+                            if (currentStatus !== newStatus) {
+                                const newStatusContent = newInvite.find('div').html();
+                                currentInvite.find('div').fadeOut(200, function() {
+                                    $(this).html(newStatusContent).fadeIn(200);
+                                });
+                            }
+                        } else {
+                            // Если приглашение больше не существует, удаляем его
+                            currentInvite.fadeOut(200, function() {
+                                $(this).remove();
+                                // Проверяем, остались ли еще приглашения
+                                if (sentInvitesContainer.find('.invited-player-item').length === 0) {
+                                    sentInvitesContainer.html('<div class="no-invites">Нет отправленных приглашений</div>');
+                                }
+                            });
+                        }
+                    });
+                    
+                    // Добавляем новые приглашения
+                    newContent.find('.invited-player-item').each(function() {
+                        const username = $(this).find('span').first().text();
+                        if (!sentInvitesContainer.find('.invited-player-item span').filter(function() {
+                            return $(this).text() === username;
+                        }).length) {
+                            const newInvite = $(this).clone();
+                            newInvite.hide();
+                            sentInvitesContainer.append(newInvite);
+                            newInvite.fadeIn(200);
+                        }
+                    });
+                });
+            }
+
+            // Запускаем периодическое обновление каждые 3 секунды
+            setInterval(function() {
+                updateInvitedPlayersList();
+                updateSentInvitesList();
+            }, 3000);
+
+            // Обработчик для кнопки "Принять"
+            $('#invitedPlayersList').on('click', '.accept-invite', function(e) {
+                e.preventDefault();
+                const button = $(this);
+                const buttonGroup = button.closest('.btn-group');
+                const inviteItem = button.closest('.invited-player-item');
+                const gameId = button.data('game-id');
+
+                console.log('GameId:', gameId);
+                console.log('CSRF token:', token);
+                console.log('CSRF header:', header);
+
+                if (!gameId) {
+                    console.error('GameId не найден');
+                    alert('Ошибка: ID игры не найден');
+                    return;
+                }
+
+                buttonGroup.find('button').prop('disabled', true);
+
+                $.ajax({
+                    url: '/games/accept',
+                    type: 'POST',
+                    data: { gameId: gameId },
+                    success: function(response) {
+                        console.log('Приглашение успешно принято');
+                        const senderName = inviteItem.find('span').first().text();
+                        inviteItem.html('<span class="accepted-invite-static">✓ Вы приняли приглашение от игрока ' + senderName + '</span>');
+                        updateInvitedPlayersList();
+                        updateSentInvitesList();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Ошибка при принятии приглашения:', error);
+                        buttonGroup.find('button').prop('disabled', false);
+                        alert('Произошла ошибка при принятии приглашения');
+                    }
+                });
+            });
+
+            // Обработчик для кнопки "Отклонить"
+            $('#invitedPlayersList').on('click', '.reject-invite', function(e) {
+                e.preventDefault();
+                const button = $(this);
+                const buttonGroup = button.closest('.btn-group');
+                const inviteItem = button.closest('.invited-player-item');
+                const gameId = button.data('game-id');
+
+                if (!gameId) {
+                    console.error('GameId не найден');
+                    return;
+                }
+
+                buttonGroup.find('button').prop('disabled', true);
+
+                $.ajax({
+                    url: '/games/reject',
+                    type: 'POST',
+                    data: { gameId: gameId },
+                    success: function(response) {
+                        console.log('Приглашение успешно отклонено');
+                        inviteItem.remove();
+                        if ($('#invitedPlayersList .invited-player-item').length === 0) {
+                            $('#invitedPlayersList .card-body').find('[th\\:fragment="invitedPlayersList"]')
+                                .html('<div class="no-invites">Нет полученных приглашений</div>');
+                        }
+                        updateSentInvitesList();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Ошибка при отклонении приглашения:', error);
+                        buttonGroup.find('button').prop('disabled', false);
+                    }
+                });
+            });
+
+            // Обработчик для кнопки "Отменить"
+            $('#sentInvitesList').on('click', '.cancel-invite', function(e) {
+                e.preventDefault();
+                const button = $(this);
+                const inviteItem = button.closest('.invited-player-item');
+                const gameId = button.data('game-id');
+
+                if (!gameId) {
+                    console.error('GameId не найден');
+                    return;
+                }
+
+                button.prop('disabled', true);
+
+                $.ajax({
+                    url: '/games/cancel',
+                    type: 'POST',
+                    data: { gameId: gameId },
+                    success: function(response) {
+                        console.log('Приглашение успешно отменено');
+                        inviteItem.remove();
+                        if ($('#sentInvitesList .invited-player-item').length === 0) {
+                            $('#sentInvitesList .card-body').find('[th\\:fragment="sentInvitesList"]')
+                                .html('<div class="no-invites">Нет отправленных приглашений</div>');
+                        }
+                        updateInvitedPlayersList();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Ошибка при отмене приглашения:', error);
+                        button.prop('disabled', false);
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html> 

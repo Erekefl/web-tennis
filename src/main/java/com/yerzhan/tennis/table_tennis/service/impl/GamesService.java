@@ -11,13 +11,10 @@ import com.yerzhan.tennis.table_tennis.repository.ChatMessageRepository;
 import com.yerzhan.tennis.table_tennis.utils.GameStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -134,6 +131,11 @@ public class GamesService {
     }
 
     public void finishGame(Integer gameId, String username, Integer playerScore, Integer opponentScore) {
+        // Добавим проверку входных данных
+        if (playerScore == null || opponentScore == null) {
+            throw new RuntimeException("Счет игроков не может быть пустым");
+        }
+        
         Games game = gamesRepository.findById(gameId)
                 .orElseThrow(() -> new RuntimeException("Игра не найдена"));
 
@@ -146,13 +148,12 @@ public class GamesService {
             throw new RuntimeException("Счет не может быть равным. Один из игроков должен победить.");
         }
 
-        // Определяем, кто выиграл раунд
-        int playerPoint = 0;
-        int opponentPoint = 0;
-        if (playerScore > opponentScore) {
-            playerPoint = 1;
-        } else {
-            opponentPoint = 1;
+        // Получаем текущее количество раундов
+        List<GameRound> rounds = gameRoundRepository.findByGameIdOrderByRoundDateDesc(gameId);
+        
+        // Проверяем, не превышено ли максимальное количество раундов
+        if (rounds.size() >= 5) {
+            throw new RuntimeException("Игра уже завершена. Сыграно максимальное количество раундов.");
         }
 
         // Сохраняем результаты раунда
@@ -160,17 +161,26 @@ public class GamesService {
         round.setGame(game);
         round.setPlayerScore(playerScore);
         round.setOpponentScore(opponentScore);
-        round.setRoundNumber(gameRoundRepository.findByGameIdOrderByRoundDateDesc(gameId).size() + 1);
+        round.setRoundNumber(rounds.size() + 1);
         gameRoundRepository.save(round);
 
-        // Обновляем общий счет и баллы
+        // Обновляем общий счет
         game.setPlayerScore(game.getPlayerScore() + playerScore);
         game.setOpponentScore(game.getOpponentScore() + opponentScore);
-        game.setPlayerPoints(game.getPlayerPoints() + playerPoint);
-        game.setOpponentPoints(game.getOpponentPoints() + opponentPoint);
 
-        // Если сыграно 5 раундов, завершаем игру
-        if (gameRoundRepository.findByGameIdOrderByRoundDateDesc(gameId).size() >= 5) {
+        // Определяем победителя раунда и обновляем очки
+        if (playerScore > opponentScore) {
+            game.setPlayerPoints(game.getPlayerPoints() + 1);
+        } else {
+            game.setOpponentPoints(game.getOpponentPoints() + 1);
+        }
+
+        // Проверяем условия завершения игры
+        boolean shouldFinishGame = rounds.size() + 1 >= 5 || // Сыграно 5 раундов
+                                  game.getPlayerPoints() >= 3 || // Один из игроков набрал 3 победы
+                                  game.getOpponentPoints() >= 3;
+
+        if (shouldFinishGame) {
             game.setGameStatus(GameStatus.FINISHED);
         }
 
@@ -181,22 +191,47 @@ public class GamesService {
         Games game = gamesRepository.findById(gameId)
                 .orElseThrow(() -> new RuntimeException("Игра не найдена"));
 
-        // Проверяем, что текущий пользователь является отправителем приглашения
-        if (!game.getPlayer().getUsername().equals(username)) {
-            throw new RuntimeException("Только отправитель приглашения может завершить игру");
+        // Проверяем, что текущий пользователь является участником игры
+        if (!game.getPlayer().getUsername().equals(username) && 
+            !game.getOpponent().getUsername().equals(username)) {
+            throw new RuntimeException("У вас нет прав для завершения этой игры");
+        }
+
+        // Проверяем, что игра не завершена
+        if (game.getGameStatus() == GameStatus.FINISHED) {
+            throw new RuntimeException("Игра уже завершена");
         }
 
         // Получаем все раунды игры
         List<GameRound> rounds = gameRoundRepository.findByGameIdOrderByRoundDateDesc(gameId);
         
-        // Считаем общий счет из существующих раундов
-        int totalPlayerScore = rounds.stream().mapToInt(GameRound::getPlayerScore).sum();
-        int totalOpponentScore = rounds.stream().mapToInt(GameRound::getOpponentScore).sum();
+        // Если раундов нет, создаем технический раунд
+        if (rounds.isEmpty()) {
+            GameRound technicalRound = new GameRound();
+            technicalRound.setGame(game);
+            technicalRound.setPlayerScore(0);
+            technicalRound.setOpponentScore(0);
+            technicalRound.setRoundNumber(1);
+            gameRoundRepository.save(technicalRound);
+        }
+        
+        // Подсчитываем очки из сыгранных раундов
+        int playerPoints = 0;
+        int opponentPoints = 0;
+        
+        for (GameRound round : rounds) {
+            if (round.getPlayerScore() > round.getOpponentScore()) {
+                playerPoints++;
+            } else if (round.getPlayerScore() < round.getOpponentScore()) {
+                opponentPoints++;
+            }
+        }
 
-        // Устанавливаем общий счет и статус FINISHED
-        game.setPlayerScore(totalPlayerScore);
-        game.setOpponentScore(totalOpponentScore);
+        // Обновляем счет и статус игры
+        game.setPlayerPoints(playerPoints);
+        game.setOpponentPoints(opponentPoints);
         game.setGameStatus(GameStatus.FINISHED);
+        
         gamesRepository.save(game);
     }
 

@@ -77,6 +77,19 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
         }
+        .btn-save:disabled {
+            background-color: #cccccc;
+            border-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .btn-save:disabled:hover {
+            background-color: #cccccc;
+            border-color: #cccccc;
+            transform: none;
+            box-shadow: none;
+        }
         .btn-finish {
             background-color: #10B981;
             border-color: #10B981;
@@ -363,10 +376,17 @@
                         $('#finishGameBtn').hide();
                         $('#historyGameBtn').show();
                         $('#playAgainBtn').show();
+                        // Делаем кнопку "Завершить раунд" неактивной
+                        $('.btn-save').prop('disabled', true);
+                        // Очищаем поля ввода
+                        $('#playerScore, #opponentScore').val('').prop('disabled', true);
                     } else {
                         $('#finishGameBtn').show();
                         $('#historyGameBtn').hide();
                         $('#playAgainBtn').hide();
+                        // Активируем кнопку и поля ввода
+                        $('.btn-save').prop('disabled', false);
+                        $('#playerScore, #opponentScore').prop('disabled', false);
                     }
                 });
             }
@@ -378,12 +398,23 @@
             $('#gameScoreForm').submit(function(e) {
                 e.preventDefault();
                 
-                const playerScore = parseInt(document.getElementById('playerScore').value);
-                const opponentScore = parseInt(document.getElementById('opponentScore').value);
+                const playerScore = document.getElementById('playerScore').value;
+                const opponentScore = document.getElementById('opponentScore').value;
                 const errorDiv = document.getElementById('scoreError');
                 
+                // Проверяем пустые поля
+                if (!playerScore || !opponentScore) {
+                    errorDiv.textContent = 'Пожалуйста, введите счет для обоих игроков';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+                
+                // Преобразуем в числа для дальнейших проверок
+                const playerScoreNum = parseInt(playerScore);
+                const opponentScoreNum = parseInt(opponentScore);
+                
                 // Проверяем равенство счета
-                if (playerScore === opponentScore) {
+                if (playerScoreNum === opponentScoreNum) {
                     errorDiv.textContent = 'Счет не может быть равным. Один из игроков должен победить.';
                     errorDiv.style.display = 'block';
                     return;
@@ -402,7 +433,7 @@
                         'Content-Type': 'application/x-www-form-urlencoded',
                         [header]: token
                     },
-                    body: `gameId=${gameId}&playerScore=${playerScore}&opponentScore=${opponentScore}`
+                    body: `gameId=${gameId}&playerScore=${playerScoreNum}&opponentScore=${opponentScoreNum}`
                 })
                 .then(response => {
                     if (!response.ok) {
@@ -456,39 +487,46 @@
             $('#playAgainBtn').click(function(e) {
                 e.preventDefault();
                 
-                // Сначала сохраняем текущую игру
+                // Создаем новую игру сразу
                 $.ajax({
-                    url: '/games/finish-and-exit',
+                    url: '/games/create-and-accept',
                     type: 'POST',
                     data: {
-                        gameId: currentGameId
+                        opponentUsername: opponentUsername
                     },
-                    success: function() {
-                        // После успешного сохранения создаем новую игру, которая сразу будет принята
-                        $.ajax({
-                            url: '/games/create-and-accept',
-                            type: 'POST',
-                            data: {
-                                opponentUsername: opponentUsername
-                            },
-                            success: function(response) {
-                                console.log('Ответ сервера:', response);
-                                if (response && response.id) {
-                                    window.location.href = '/games/start/' + response.id;
-                                } else {
-                                    console.error('Неверный формат ответа:', response);
-                                    alert('Ошибка при создании новой игры: неверный формат ответа');
-                                }
-                            },
-                            error: function(xhr) {
-                                console.error('Ошибка при создании игры:', xhr.responseText);
-                                alert('Ошибка при создании новой игры: ' + (xhr.responseText || 'неизвестная ошибка'));
-                            }
-                        });
+                    success: function(response) {
+                        if (response && response.id) {
+                            // Обновляем ID текущей игры
+                            currentGameId = response.id;
+                            
+                            // Очищаем таблицу раундов
+                            $('#roundsTableBody').empty();
+                            
+                            // Обнуляем общий счет
+                            $('.total-player-score').text('0');
+                            $('.total-opponent-score').text('0');
+                            
+                            // Очищаем и разблокируем поля ввода
+                            $('#playerScore, #opponentScore').val('').prop('disabled', false);
+                            
+                            // Разблокируем кнопку "Завершить раунд"
+                            $('.btn-save').prop('disabled', false);
+                            
+                            // Показываем кнопку "Завершить игру" и скрываем остальные
+                            $('#finishGameBtn').show();
+                            $('#historyGameBtn').hide();
+                            $('#playAgainBtn').hide();
+                            
+                            // Обновляем значение gameId в форме
+                            $('input[name="gameId"]').val(response.id);
+                        } else {
+                            console.error('Неверный формат ответа:', response);
+                            alert('Ошибка при создании новой игры: неверный формат ответа');
+                        }
                     },
                     error: function(xhr) {
-                        console.error('Ошибка при сохранении игры:', xhr.responseText);
-                        alert('Ошибка при сохранении текущей игры: ' + (xhr.responseText || 'неизвестная ошибка'));
+                        console.error('Ошибка при создании игры:', xhr.responseText);
+                        alert('Ошибка при создании новой игры: ' + (xhr.responseText || 'неизвестная ошибка'));
                     }
                 });
             });

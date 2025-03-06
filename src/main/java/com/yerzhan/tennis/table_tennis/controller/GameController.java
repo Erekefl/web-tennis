@@ -91,10 +91,15 @@ public class GameController {
             @RequestParam Integer opponentScore,
             Authentication authentication) {
         try {
+            // Добавим логирование для отладки
+            log.info("Finishing game: gameId={}, playerScore={}, opponentScore={}", 
+                    gameId, playerScore, opponentScore);
+                    
             String username = authentication.getName();
             gamesService.finishGame(gameId, username, playerScore, opponentScore);
             return ResponseEntity.ok("Результат игры успешно сохранен");
         } catch (Exception e) {
+            log.error("Error finishing game: {}", e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -102,6 +107,22 @@ public class GameController {
     @PostMapping("/finish-and-exit")
     @ResponseBody
     public ResponseEntity<String> finishGameAndExit(
+            @RequestParam Integer gameId,
+            Authentication authentication) {
+        try {
+            log.info("Finishing game and exit: gameId={}", gameId);
+            String username = authentication.getName();
+            gamesService.finishGameAndExit(gameId, username);
+            return ResponseEntity.ok("Игра успешно завершена");
+        } catch (Exception e) {
+            log.error("Error finishing game and exit: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/early-finish")
+    @ResponseBody
+    public ResponseEntity<String> earlyFinishGame(
             @RequestParam Integer gameId,
             Authentication authentication) {
         try {

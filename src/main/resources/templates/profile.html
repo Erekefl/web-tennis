@@ -306,20 +306,43 @@
                 }
             });
 
-            function toggleEditForm() {
+            // Удаляем старый обработчик
+            $('.edit-button').click(function() {
                 const displayElement = $('.username-display');
                 const formElement = $('.username-form');
                 const currentUsername = $('.username-text').text();
                 
-                if (formElement.hasClass('active')) {
-                    formElement.removeClass('active');
-                    displayElement.show();
-                } else {
-                    $('#newUsername').val(currentUsername);
-                    formElement.addClass('active');
-                    displayElement.hide();
-                }
-            }
+                // Показываем форму редактирования
+                $('#newUsername').val(currentUsername);
+                formElement.addClass('active');
+                displayElement.hide();
+                
+                // Скрываем кнопки
+                $('.back-button').hide();
+                $('.edit-button').hide();
+                
+                // Показываем кнопки сохранения и отмены
+                $('.username-form').show();
+            });
+
+            // Обработчик для кнопки Отмена
+            $('#cancelEdit').click(function() {
+                const displayElement = $('.username-display');
+                const formElement = $('.username-form');
+                
+                // Скрываем форму редактирования
+                formElement.removeClass('active');
+                displayElement.show();
+                
+                // Показываем обратно кнопки
+                $('.back-button').show();
+                $('.edit-button').show();
+            });
+
+            // Обработчик для кнопки Сохранить
+            $('#saveUsername').click(function() {
+                saveUsername();
+            });
 
             function saveUsername() {
                 const newUsername = $('#newUsername').val();
@@ -335,7 +358,10 @@
                     data: { newUsername: newUsername },
                     success: function(response) {
                         $('.username-text').text(newUsername);
-                        toggleEditForm();
+                        $('.username-form').removeClass('active');
+                        $('.username-display').show();
+                        $('.back-button').show();
+                        $('.edit-button').show();
                         alert('Имя пользователя успешно обновлено');
                     },
                     error: function(xhr) {
@@ -343,15 +369,6 @@
                     }
                 });
             }
-
-            function cancelEdit() {
-                toggleEditForm();
-            }
-
-            // Привязываем обработчики событий
-            $('.edit-button').click(toggleEditForm);
-            $('#saveUsername').click(saveUsername);
-            $('#cancelEdit').click(cancelEdit);
         });
     </script>
 </head>
